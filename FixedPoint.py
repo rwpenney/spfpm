@@ -1,85 +1,150 @@
 #!/usr/bin/python
 # Simple fixed-point numerical class
 # $Revision$, $Date$
-# RW Penney, December 2006
+# Copyright 2006, RW Penney
+
+
+# This file is Copyright 2006, RW Penney
+# it is released under the Python-2.4.2 license
+# (see http://www.python.org/psf/license)
+
+
+"""Simple fixed-point numerical class
+
+Creation:
+    x = FPnum(2)
+
+Manipulation:
+    x *= 2
+    rt = x.sqrt()
+
+Output:
+    print x, rt
+    q = float(x)
+"""
 
 
 class FPnum(object):
-    fraction_bits = 384
+    fraction_bits = 64
     scale = 1L << fraction_bits
     round = 1L << (fraction_bits - 1)
 
     def __init__(self, val=0L):
-        self.value = long(val * self.scale)
+        if isinstance(val, FPnum):
+            self.scaledval = val.scaledval
+        else:
+            self.scaledval = long(val * self.scale)
 
-    def SetFraction(self, n_bits=32):
+    def SetFraction(n_bits=32):
         # change number of fractional bits (call before creating numbers!)
-        self.fraction_bits = n_bits
-        scale = 1L << n_bits
-        round = 1L << (n_bits - 1)
+        FPnum.fraction_bits = n_bits
+        FPnum.scale = 1L << n_bits
+        FPnum.round = 1L << (n_bits - 1)
+    SetFraction = staticmethod(SetFraction)
+
+    # converstion operations:
+    def __int__(self):
+        """Cast to (plain) integer"""
+        return int((self.scaledval + self.round) / self.scale)
+
+    def __long__(self):
+        """Cast to long integer"""
+        return long((self.scaledval + self.round) / self.scale)
+
+    def __float__(self):
+        """Cast to floating-point"""
+        return float(self.scaledval) / float(self.scale)
 
     # unary arithmetic operations:
     def __neg__(self):
+        """Change sign"""
         new = FPnum()
-        new.value = -self.value
+        new.scaledval = -self.scaledval
         return new
 
     # arithmetic comparison tests:
     def __eq__(self, other):
-        return self.value == other.value
+        """Equality test"""
+        if not isinstance(other, FPnum): other = FPnum(other)
+        return self.scaledval == other.scaledval
 
     def __ne__(self, other):
-        return self.value != other.value
+        """Inequality test"""
+        if not isinstance(other, FPnum): other = FPnum(other)
+        return self.scaledval != other.scaledval
 
     def __ge__(self, other):
-        return self.value >= other.value
+        """Greater-or-equal test"""
+        if not isinstance(other, FPnum): other = FPnum(other)
+        return self.scaledval >= other.scaledval
 
     def __gt__(self, other):
-        return self.value > other.value
+        """Greater-than test"""
+        if not isinstance(other, FPnum): other = FPnum(other)
+        return self.scaledval > other.scaledval
 
     def __le__(self, other):
-        return self.value <= other.value
+        """Less-or-equal test"""
+        if not isinstance(other, FPnum): other = FPnum(other)
+        return self.scaledval <= other.scaledval
 
     def __lt__(self, other):
-        return self.value < other.value
+        """Greater-than test"""
+        if not isinstance(other, FPnum): other = FPnum(other)
+        return self.scaledval < other.scaledval
 
     def __nonzero__(self):
-        return (self.value != 0)
+        """Test for non-zero"""
+        if not isinstance(other, FPnum): other = FPnum(other)
+        return (self.scaledval != 0)
 
     # arithmetic combinations:
     def __add__(self, other):
+        """Add another number"""
+        if not isinstance(other, FPnum): other = FPnum(other)
         new = FPnum()
-        new.value = self.value + other.value
+        new.scaledval = self.scaledval + other.scaledval
         return new
 
     def __iadd__(self, other):
-        self.value += other.value
+        """In-place addition"""
+        if not isinstance(other, FPnum): other = FPnum(other)
+        self.scaledval += other.scaledval
         return self
 
     def __sub__(self, other):
+        """Subtract another number"""
+        if not isinstance(other, FPnum): other = FPnum(other)
         new = FPnum()
-        new.value = self.value - other.value
+        new.scaledval = self.scaledval - other.scaledval
         return new
 
     def __isub__(self, other):
-        self.value -= other.value
+        """In-place subtraction"""
+        if not isinstance(other, FPnum): other = FPnum(other)
+        self.scaledval -= other.scaledval
         return self
 
     def __mul__(self, other):
+        """Multiply by another number"""
+        if not isinstance(other, FPnum): other = FPnum(other)
         new = FPnum()
-        new.value = (self.value * other.value + self.round) / self.scale
+        new.scaledval = (self.scaledval * other.scaledval + self.round) / self.scale
         return new
 
     def __div__(self, other):
+        """Divide by another number"""
+        if not isinstance(other, FPnum): other = FPnum(other)
         new = FPnum()
-        new.value = (self.value * self.scale + self.round) / other.value
+        new.scaledval = (self.scaledval * self.scale + self.round) / other.scaledval
         return new
 
     # printing/converstion routines:
     def __str__(self):
-        val = self.value
+        """Convert number (as decimal) into string"""
+        val = self.scaledval
         rep = ''
-        if self.value < 0:
+        if self.scaledval < 0:
             rep = '-'
             val *= -1
         whole = val / self.scale
@@ -98,21 +163,23 @@ class FPnum(object):
 
     # mathematical functions:
     def sqrt(self):
+        """Compute square-root of given number"""
         # calculate crude initial approximation:
         rt = FPnum()
-        rt.value = 1L << (self.fraction_bits / 2)
-        val = self.value
+        rt.scaledval = 1L << (self.fraction_bits / 2)
+        val = self.scaledval
         while val > 0:
             val >>= 2
-            rt.value <<= 1
+            rt.scaledval <<= 1
         # refine approximation by Newton iteration:
         while True:
             delta = (rt - self / rt) / FPnum(2)
             rt -= delta
-            if delta.value == 0: break
+            if delta.scaledval == 0: break
         return rt
 
     def exp(self):
+        """Compute exponential of given number"""
         ex = FPnum(1)
         term = FPnum(1)
         idx = FPnum(1)
@@ -120,10 +187,11 @@ class FPnum(object):
             term *= self / idx
             ex += term
             idx += FPnum(1)
-            if term.value == 0: break
+            if term.scaledval == 0: break
         return ex
 
     def sincos(self):
+        """Compute sine & cosine of given number (as angle in radians)"""
         sn = FPnum(0)
         cs = FPnum(1)
         term = FPnum(1)
@@ -141,17 +209,22 @@ class FPnum(object):
                 else:
                     sn -= term
             idx += 1
-            if term.value == 0: break
+            if term.scaledval == 0: break
         return (sn, cs)
 
 
+
 if __name__ == "__main__":
-    q = FPnum(-32)
-    for idx in xrange(0,32):
-        print q
-        q /= FPnum(2)
-    val = 2
-    rt = FPnum(val).sqrt()
-    print 'sqrt(' + str(val) + ') = ', rt
-    print '  val ~ ', rt * rt
-    print 'exp(1) = ', FPnum(1).exp()
+    # basic demonstration of roots & exponents at various accuracies:
+    resolution = 6
+    while resolution <= 384:
+        print '=== ' + str(resolution) + 'bits ==='
+        FPnum.SetFraction(resolution)
+        val = 2
+        rt = FPnum(val).sqrt()
+        print 'sqrt(' + str(val) + ')~ ' + str(rt)
+        print 'sqrt(' +str(val) + ')^2 ~ ' + str(rt * rt)
+        print 'exp(1) = ', FPnum(1).exp()
+        print
+
+        resolution *= 4
