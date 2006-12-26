@@ -5,8 +5,11 @@
 
 
 # This file is Copyright 2006, RW Penney
-# it is released under the Python-2.4.2 license
-# (see http://www.python.org/psf/license)
+# and is released under the Python-2.4.2 license
+# (see http://www.python.org/psf/license),
+# it therefore comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
+# However, the author welcomes *constructive* feedback
+# and bug-fixes via: rwpenney 'AT' users 'DOT' sourceforge 'DOT' net
 
 
 """Simple fixed-point numerical class
@@ -33,7 +36,7 @@ class FPnum(object):
         if isinstance(val, FPnum):
             self.scaledval = val.scaledval
         else:
-            self.scaledval = long(val * self.scale)
+            self.scaledval = long(val * FPnum.scale)
 
     def SetFraction(n_bits=32):
         # change number of fractional bits (call before creating numbers!)
@@ -45,15 +48,15 @@ class FPnum(object):
     # converstion operations:
     def __int__(self):
         """Cast to (plain) integer"""
-        return int((self.scaledval + self.round) / self.scale)
+        return int((self.scaledval + FPnum.round) / FPnum.scale)
 
     def __long__(self):
         """Cast to long integer"""
-        return long((self.scaledval + self.round) / self.scale)
+        return long((self.scaledval + FPnum.round) / FPnum.scale)
 
     def __float__(self):
         """Cast to floating-point"""
-        return float(self.scaledval) / float(self.scale)
+        return float(self.scaledval) / float(FPnum.scale)
 
     # unary arithmetic operations:
     def __neg__(self):
@@ -129,14 +132,14 @@ class FPnum(object):
         """Multiply by another number"""
         if not isinstance(other, FPnum): other = FPnum(other)
         new = FPnum()
-        new.scaledval = (self.scaledval * other.scaledval + self.round) / self.scale
+        new.scaledval = (self.scaledval * other.scaledval + FPnum.round) / FPnum.scale
         return new
 
     def __div__(self, other):
         """Divide by another number"""
         if not isinstance(other, FPnum): other = FPnum(other)
         new = FPnum()
-        new.scaledval = (self.scaledval * self.scale + self.round) / other.scaledval
+        new.scaledval = (self.scaledval * FPnum.scale + FPnum.round) / other.scaledval
         return new
 
     # printing/converstion routines:
@@ -147,17 +150,17 @@ class FPnum(object):
         if self.scaledval < 0:
             rep = '-'
             val *= -1
-        whole = val / self.scale
-        frac = val - self.scale * whole
+        whole = val / FPnum.scale
+        frac = val - FPnum.scale * whole
         rep += str(whole)
         if frac != 0:
             rep += '.'
             idx = 0
-            while idx < (self.fraction_bits / 3) and frac != 0:
+            while idx < (FPnum.fraction_bits / 3) and frac != 0:
                 frac *= 10L
-                q = frac / self.scale
+                q = frac / FPnum.scale
                 rep += str(q)
-                frac -= q * self.scale
+                frac -= q * FPnum.scale
                 idx += 1
         return rep
 
@@ -166,7 +169,7 @@ class FPnum(object):
         """Compute square-root of given number"""
         # calculate crude initial approximation:
         rt = FPnum()
-        rt.scaledval = 1L << (self.fraction_bits / 2)
+        rt.scaledval = 1L << (FPnum.fraction_bits / 2)
         val = self.scaledval
         while val > 0:
             val >>= 2
