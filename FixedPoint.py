@@ -28,9 +28,10 @@ Output:
 
 
 class FPnum(object):
-    fraction_bits = 64
+    fraction_bits = 64                      # bits to right of binary point
     scale = 1L << fraction_bits
     round = 1L << (fraction_bits - 1)
+    exp1 = None                             # cache of exp(1)
 
     def __init__(self, val=0L):
         if isinstance(val, FPnum):
@@ -43,6 +44,7 @@ class FPnum(object):
         FPnum.fraction_bits = n_bits
         FPnum.scale = 1L << n_bits
         FPnum.round = 1L << (n_bits - 1)
+        FPnum.exp1 = None
     SetFraction = staticmethod(SetFraction)
 
     # converstion operations:
@@ -115,6 +117,9 @@ class FPnum(object):
         self.scaledval += other.scaledval
         return self
 
+    def __radd__(self, other):
+        return FPnum(other) + self
+
     def __sub__(self, other):
         """Subtract another number"""
         if not isinstance(other, FPnum): other = FPnum(other)
@@ -128,6 +133,9 @@ class FPnum(object):
         self.scaledval -= other.scaledval
         return self
 
+    def __rsub__(self, other):
+        return FPnum(other) - self
+
     def __mul__(self, other):
         """Multiply by another number"""
         if not isinstance(other, FPnum): other = FPnum(other)
@@ -135,12 +143,18 @@ class FPnum(object):
         new.scaledval = (self.scaledval * other.scaledval + FPnum.round) / FPnum.scale
         return new
 
+    def __rmul__(self, other):
+        return FPnum(other) * self
+
     def __div__(self, other):
         """Divide by another number"""
         if not isinstance(other, FPnum): other = FPnum(other)
         new = FPnum()
         new.scaledval = (self.scaledval * FPnum.scale + FPnum.round) / other.scaledval
         return new
+
+    def __rdiv__(self, other):
+        return FPnum(other) / self
 
     # printing/converstion routines:
     def __str__(self):
@@ -165,9 +179,31 @@ class FPnum(object):
         return rep
 
     # mathematical functions:
+    def __pow__(self, other, modulus=None):
+        assert modulus is None
+        assert isinstance(other, int) or isinstance(other, long)
+        if other >= 0:
+            pwr = other
+            invert = False
+        else:
+            pwr = -other
+            invert = True
+        # compute (integer) power by repeated squaring:
+        result = FPnum(1)
+        term = self
+        while pwr != 0:
+            if pwr & 1:
+                result *= term
+            pwr >>= 1
+            term *= term
+        if invert:
+            result = FPnum(1) / result
+        return result
+
     def sqrt(self):
         """Compute square-root of given number"""
         # calculate crude initial approximation:
+        assert self.scaledval >= 0
         rt = FPnum()
         rt.scaledval = 1L << (FPnum.fraction_bits / 2)
         val = self.scaledval
@@ -183,6 +219,12 @@ class FPnum(object):
 
     def exp(self):
         """Compute exponential of given number"""
+        if FPnum.exp1 is None:
+            FPnum.exp1 = FPnum(1)._rawexp()
+        pwr = long(self)
+        return (self - pwr)._rawexp() * (FPnum.exp1 ** pwr)
+
+    def _rawexp(self):
         ex = FPnum(1)
         term = FPnum(1)
         idx = FPnum(1)
@@ -195,6 +237,11 @@ class FPnum(object):
 
     def sincos(self):
         """Compute sine & cosine of given number (as angle in radians)"""
+        # use double-angle formulae to series-expansion with large argument:
+        if self.scaledval > 2*FPnum.scale or self.scaledval < -2*FPnum.scale:
+            (sn, cs) = (FPnum(self) / 2).sincos()
+            return ((2 * sn * cs), ((cs - sn) * (cs + sn)))
+
         sn = FPnum(0)
         cs = FPnum(1)
         term = FPnum(1)
