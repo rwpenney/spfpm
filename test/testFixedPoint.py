@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # unit-tests for simple fixed-point Python module
-# $Revision: $, $Date: $
+# $Revision$, $Date$
 # RW Penney, January 2006
 
 import sys, unittest

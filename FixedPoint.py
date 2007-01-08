@@ -24,6 +24,14 @@ Manipulation:
 Output:
     print x, rt
     q = float(x)
+
+Note:
+    Be careful not to assume that a large number of fractional bits within
+    a number will necessarily mean large accuracy. For example, computations
+    involving exponentiation and logarithms are intrinsically vulnerable to
+    magnifying mere rounding errors in their inputs into significant errors
+    in their outputs. This is a fact of life with any approximation to
+    real arithmetic using finite-precision quantities.
 """
 
 
@@ -32,6 +40,7 @@ class FPnum(object):
     scale = 1L << fraction_bits
     round = 1L << (fraction_bits - 1)
     exp1 = None                             # cache of exp(1)
+    log2 = None                             # cache of log(2)
 
     def __init__(self, val=0L):
         if isinstance(val, FPnum):
@@ -45,6 +54,7 @@ class FPnum(object):
         FPnum.scale = 1L << n_bits
         FPnum.round = 1L << (n_bits - 1)
         FPnum.exp1 = None
+        FPnum.log2 = None
     SetFraction = staticmethod(SetFraction)
 
     # converstion operations:
@@ -235,9 +245,38 @@ class FPnum(object):
             if term.scaledval == 0: break
         return ex
 
+    def log(self):
+        """Compute (natural) logarithm of given number"""
+        assert self.scaledval > 0
+        if FPnum.log2 is None:
+            FPnum.log2 = FPnum(2)._rawlog()
+        count = 0
+        val = FPnum(self)
+        while val > 2.0:
+            val /= 2
+            count += 1
+        while val < 0.5:
+            val *= 2
+            count -= 1
+        return val._rawlog() + count * FPnum.log2
+
+    def _rawlog(self):
+        lg = FPnum(0)
+        z = (self - 1) / (self + 1)
+        z2 = z * z
+        term = 2 * z
+        idx = 1
+        while True:
+            lg += term / idx
+            term *= z2
+            idx += 2
+            if term.scaledval == 0: break
+        return lg
+
+
     def sincos(self):
         """Compute sine & cosine of given number (as angle in radians)"""
-        # use double-angle formulae to series-expansion with large argument:
+        # use double-angle formulae to avoid series with large argument:
         if self.scaledval > 2*FPnum.scale or self.scaledval < -2*FPnum.scale:
             (sn, cs) = (FPnum(self) / 2).sincos()
             return ((2 * sn * cs), ((cs - sn) * (cs + sn)))
