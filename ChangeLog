@@ -1,0 +1,14 @@
+ChangeLog for Simple Python Fixed-Point Module
+
+13Jan07 - added basic Makefile for building release packages
+	added unit-tests for pow() and sincos() methods
+
+08Jan07 - added logarithm methods
+
+03Jan07 - added basic unit-testing class for arithmetic operations
+
+02Jan07 - converted RCS repository into SVN
+
+26Dec06 - *** prototype of spfpm-0.1 released
+
+## $Revision$, $Date$

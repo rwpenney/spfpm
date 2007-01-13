@@ -1,0 +1,5 @@
+Extract fractional_bits into shareable context to allow multiple precision
+Add mechanism for calculating Pi to current precision
+Add support for arctan etc
+
+## $Revision$, $Date$

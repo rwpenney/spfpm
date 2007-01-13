@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # Simple fixed-point numerical class
 # $Revision$, $Date$
-# Copyright 2006, RW Penney
+# Copyright 2006-2007, RW Penney
 
 
-# This file is Copyright 2006, RW Penney
+# This file is Copyright 2006-2007, RW Penney
 # and is released under the Python-2.4.2 license
 # (see http://www.python.org/psf/license),
 # it therefore comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
@@ -45,8 +45,16 @@ class FPnum(object):
     def __init__(self, val=0L):
         if isinstance(val, FPnum):
             self.scaledval = val.scaledval
+        elif isinstance(val, tuple):
+            (fbits, sval) = val
+            if fbits != FPnum.fraction_bits:
+                FPnum.SetFraction(fbits)
+            self.scaledval = sval
         else:
             self.scaledval = long(val * FPnum.scale)
+
+    def __repr__(self):
+        return 'FPnum((%d,%d))' % (self.fraction_bits, self.scaledval)
 
     def SetFraction(n_bits=32):
         # change number of fractional bits (call before creating numbers!)
@@ -191,14 +199,23 @@ class FPnum(object):
     # mathematical functions:
     def __pow__(self, other, modulus=None):
         assert modulus is None
-        assert isinstance(other, int) or isinstance(other, long)
-        if other >= 0:
-            pwr = other
-            invert = False
+        if self == 0:
+            return FPnum(1)
+        if isinstance(other, int) or isinstance(other, long):
+            ipwr = other
+            frac = FPnum(1)
         else:
-            pwr = -other
+            ipwr = long(other)
+            frac = ((other - ipwr) * self.log()).exp()
+        return self.intpower(ipwr) * frac
+
+    def intpower(self, pwr):
+        """compute integer power by repeated squaring"""
+        assert isinstance(pwr, int) or isinstance(pwr, long)
+        invert = False
+        if pwr < 0:
+            pwr *= -1
             invert = True
-        # compute (integer) power by repeated squaring:
         result = FPnum(1)
         term = self
         while pwr != 0:
@@ -247,15 +264,16 @@ class FPnum(object):
 
     def log(self):
         """Compute (natural) logarithm of given number"""
+        thresh = FPnum(2)
         assert self.scaledval > 0
         if FPnum.log2 is None:
             FPnum.log2 = FPnum(2)._rawlog()
         count = 0
         val = FPnum(self)
-        while val > 2.0:
+        while val > thresh:
             val /= 2
             count += 1
-        while val < 0.5:
+        while val < 1 / thresh:
             val *= 2
             count -= 1
         return val._rawlog() + count * FPnum.log2

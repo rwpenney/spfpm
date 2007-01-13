@@ -3,7 +3,7 @@
 # $Revision$, $Date$
 # RW Penney, January 2006
 
-import sys, unittest
+import math, sys, unittest
 sys.path.insert(0, '..')
 import FixedPoint
 
@@ -134,6 +134,68 @@ class FixedPointTest(unittest.TestCase):
 
                 tmp = fpx / float(y * scale)
                 self.assertAlmostEqual(fpa, tmp)
+
+
+    def testExp(self):
+        """exponent method agree with math.exp"""
+        scale = 0.23
+        for i in range(-32, 32):
+            x = i * scale
+            exp_true = math.exp(x)
+            exp = FixedPoint.FPnum(x).exp()
+            self.assertAlmostEqual(exp_true, exp)
+
+
+    def testLog(self):
+        """logarithm method agree with math.log"""
+        """exp and log methods should be inverses & agree with math.*"""
+        base = 1.5
+        for i in range(1, 32):
+            for j in range(0,2):
+                if j == 0:
+                    x = 1 / (base ** i)
+                else:
+                    x = base ** i
+                log_true = math.log(x)
+                log = FixedPoint.FPnum(x).log()
+                self.assertAlmostEqual(log_true, log)
+
+
+    def testExpLog(self):
+        """exp and log methods should be inverses & agree with math.*"""
+        scale = 0.27
+        for i in range(-32, 32):
+            x = i * scale
+            exp = FixedPoint.FPnum(x).exp()
+            logexp = exp.log()
+            self.assertAlmostEqual(x, float(logexp))
+
+
+    def testPow(self):
+        scale = 0.205
+        scale2 = 0.382
+        for i in range(1, 32):
+            x = i * scale
+            pow = FixedPoint.FPnum(0) ** x
+            self.assertEqual(FixedPoint.FPnum(1), pow)
+            for j in range(-16, 16):
+                y = j * scale2
+                pow_true = math.pow(x, y)
+                pow = FixedPoint.FPnum(x) ** y
+                self.assertAlmostEqual(pow_true, pow)
+
+
+    def testSinCos(self):
+        """sin/cos methods agree with math.sin/cos"""
+        scale = 0.342
+        for i in range(-32, 32):
+            x = i * scale
+            sin_true = math.sin(x)
+            cos_true = math.cos(x)
+            (sin, cos) = FixedPoint.FPnum(x).sincos()
+            self.assertAlmostEqual(sin_true, sin)
+            self.assertAlmostEqual(cos_true, cos)
+
 
 
 if __name__ == "__main__":
