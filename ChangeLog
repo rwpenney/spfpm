@@ -1,5 +1,9 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+16Jan06	- added test for __nonzero__ method & patched reference to 'other'
+	removed __iadd__, __isub__ methods to make immutable object
+	added unit-test for immutability
+
 15Jan07	- *** spfpm-0.2 released
 
 13Jan07	- added basic Makefile for building release packages

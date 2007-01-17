@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Simple fixed-point numerical class
+# Simple Python Fixed-Point Module (SPFPM)
 # $Revision$, $Date$
 # Copyright 2006-2007, RW Penney
 
@@ -118,7 +118,6 @@ class FPnum(object):
 
     def __nonzero__(self):
         """Test for non-zero"""
-        if not isinstance(other, FPnum): other = FPnum(other)
         return (self.scaledval != 0)
 
     # arithmetic combinations:
@@ -129,12 +128,6 @@ class FPnum(object):
         new.scaledval = self.scaledval + other.scaledval
         return new
 
-    def __iadd__(self, other):
-        """In-place addition"""
-        if not isinstance(other, FPnum): other = FPnum(other)
-        self.scaledval += other.scaledval
-        return self
-
     def __radd__(self, other):
         return FPnum(other) + self
 
@@ -144,12 +137,6 @@ class FPnum(object):
         new = FPnum()
         new.scaledval = self.scaledval - other.scaledval
         return new
-
-    def __isub__(self, other):
-        """In-place subtraction"""
-        if not isinstance(other, FPnum): other = FPnum(other)
-        self.scaledval -= other.scaledval
-        return self
 
     def __rsub__(self, other):
         return FPnum(other) - self
@@ -322,16 +309,4 @@ class FPnum(object):
 
 
 if __name__ == "__main__":
-    # basic demonstration of roots & exponents at various accuracies:
-    resolution = 6
-    while resolution <= 384:
-        print '=== ' + str(resolution) + 'bits ==='
-        FPnum.SetFraction(resolution)
-        val = 2
-        rt = FPnum(val).sqrt()
-        print 'sqrt(' + str(val) + ')~ ' + str(rt)
-        print 'sqrt(' +str(val) + ')^2 ~ ' + str(rt * rt)
-        print 'exp(1) = ', FPnum(1).exp()
-        print
-
-        resolution *= 4
+    pass

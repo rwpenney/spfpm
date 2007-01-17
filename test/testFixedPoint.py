@@ -28,6 +28,54 @@ class FixedPointTest(unittest.TestCase):
                     self.assertEqual(long(-step - 1), (neg / base))
 
 
+    def testBoolConditions(self):
+        """values used in boolean expressions should behave as true/false"""
+        if FixedPoint.FPnum(0):
+            self.fail()
+        if FixedPoint.FPnum(1):
+            pass
+        else:
+            self.fail()
+
+
+    def testImmutable(self):
+        """arithmetic operations on object should not alter orignal value"""
+        scale = 0.297
+        for i in range(-8, 8):
+            orig = FixedPoint.FPnum(i * scale)
+
+            x = FixedPoint.FPnum(i * scale)
+            x0 = x
+            if x is x0:
+                pass
+            else:
+                self.fail()
+
+            x = FixedPoint.FPnum(i * scale)
+            x0 = x
+            x += 1
+            self.assertEqual(orig, x0)
+            if x is x0: self.fail()
+
+            x = FixedPoint.FPnum(i * scale)
+            x0 = x
+            x -= 1
+            self.assertEqual(orig, x0)
+            if x is x0: self.fail()
+
+            x = FixedPoint.FPnum(i * scale)
+            x0 = x
+            x *= 2
+            self.assertEqual(orig, x0)
+            if x is x0: self.fail()
+
+            x = FixedPoint.FPnum(i * scale)
+            x0 = x
+            x /= 2
+            self.assertEqual(orig, x0)
+            if x is x0: self.fail()
+
+
     def testAddition(self):
         """addition operators should promote & commute"""
         scale = 0.125
@@ -43,7 +91,7 @@ class FixedPointTest(unittest.TestCase):
                 self.assertEqual(fpa, fpy + fpx)
                 self.assertEqual((x + y) * scale, float(fpx + fpy))
 
-                tmp = FixedPoint.FPnum(fpx)
+                tmp = fpx
                 tmp += fpy
                 self.assertEqual(fpa, tmp)
 
@@ -69,7 +117,7 @@ class FixedPointTest(unittest.TestCase):
                 self.assertEqual(-fpa, fpy - fpx)
                 self.assertEqual((x - y) * scale, float(fpx - fpy))
 
-                tmp = FixedPoint.FPnum(fpx)
+                tmp = fpx
                 tmp -= fpy
                 self.assertEqual(fpa, tmp)
 
@@ -96,7 +144,7 @@ class FixedPointTest(unittest.TestCase):
                 self.assertEqual(fpa, fpy * fpx)
                 self.assertEqual((x * y) * scale2, float(fpx * fpy))
 
-                tmp = FixedPoint.FPnum(fpx)
+                tmp = fpx
                 tmp *= fpy
                 self.assertEqual(fpa, tmp)
 
@@ -125,7 +173,7 @@ class FixedPointTest(unittest.TestCase):
                 self.assertAlmostEqual(1 / fpa, fpy / fpx)
                 self.assertAlmostEqual((a * scale), float(fpx / fpy))
 
-                tmp = FixedPoint.FPnum(fpx)
+                tmp = fpx
                 tmp /= fpy
                 self.assertAlmostEqual(fpa, tmp)
 
