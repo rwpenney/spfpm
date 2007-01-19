@@ -1,5 +1,9 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+18Jan06	- added unit-test for __str__ method
+
+17Jan06	- converted resolution information to shareable FPfamily object
+
 16Jan06	- added test for __nonzero__ method & patched reference to 'other'
 	removed __iadd__, __isub__ methods to make immutable object
 	added unit-test for immutability

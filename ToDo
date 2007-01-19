@@ -1,5 +1,3 @@
-Convert to immutable type
-Extract fractional_bits into shareable context to allow multiple precision
 Add support for fixed total number of bits
 Add mechanism for calculating Pi to current precision
 Add support for arctan etc

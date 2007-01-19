@@ -75,6 +75,14 @@ class FixedPointTest(unittest.TestCase):
             self.assertEqual(orig, x0)
             if x is x0: self.fail()
 
+    def testPrinting(self):
+        """check conversion to string"""
+        for i in range(1,10):
+            v = 2 ** i
+            for x in [v, 1.0/v]:
+                fpa = "%.8g" % x
+                fpx = str(FixedPoint.FPnum(x))
+                self.assertEqual(fpa, fpx)
 
     def testAddition(self):
         """addition operators should promote & commute"""
@@ -183,6 +191,25 @@ class FixedPointTest(unittest.TestCase):
                 tmp = fpx / float(y * scale)
                 self.assertAlmostEqual(fpa, tmp)
 
+    def testFamilyProtection(self):
+        """check that arithmetic operators do not transmute resolution families"""
+        famlist = [FixedPoint.FPfamily(res) for res in [8, 16, 40, 90]]
+        for fam0 in famlist:
+            for fam1 in famlist:
+                x = FixedPoint.FPnum(2, fam0)
+                y = FixedPoint.FPnum(3, fam1)
+                try: a = x + y
+                except FixedPoint.FPexception: self.failIf(fam0 is fam1)
+                else: self.failUnless(fam0 is fam1)
+                try: a = x - y
+                except FixedPoint.FPexception: self.failIf(fam0 is fam1)
+                else: self.failUnless(fam0 is fam1)
+                try: a = x * y
+                except FixedPoint.FPexception: self.failIf(fam0 is fam1)
+                else: self.failUnless(fam0 is fam1)
+                try: a = x / y
+                except FixedPoint.FPexception: self.failIf(fam0 is fam1)
+                else: self.failUnless(fam0 is fam1)
 
     def testExp(self):
         """exponent method agree with math.exp"""
