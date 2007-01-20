@@ -15,7 +15,8 @@
 """Simple fixed-point numerical class
 
 Creation:
-    x = FPnum(2)
+    x = FXnum(2)
+    y = FXnum(1.2, FXfamily(n_bits=108))
 
 Manipulation:
     x *= 2
@@ -34,40 +35,61 @@ Note:
     real arithmetic using finite-precision quantities.
 """
 
-class FPfamily(object):
+class FXfamily(object):
     def __init__(self, n_bits=64):
         self.fraction_bits = n_bits         # bits to right of binary point
         self.scale = 1L << n_bits
         self.round = 1L << (n_bits - 1)
         self.exp1 = None                    # cache of exp(1)
         self.log2 = None                    # cache of log(2)
+        self.Pi = None                      # cache of 3.14159...
 
     def __repr__(self):
-        return 'FPfamily(%d)' % (self.fraction_bits)
+        return 'FXfamily(%d)' % (self.fraction_bits)
 
     def __eq__(self, other):
-        if isinstance(other, FPfamily):
+        if isinstance(other, FXfamily):
             return self.fraction_bits == other.fraction_bits
         else:
             return false
 
     def __ne__(self, other):
-        if isinstance(other, FPfamily):
+        if isinstance(other, FXfamily):
             return self.fraction_bits != other.fraction_bits
         else:
             return true
 
+    def GetResolution(self):
+        return self.fraction_bits
+
     def GetExp1(self):
         """return cached value of exp(1)"""
         if self.exp1 is None:
-            self.exp1 = FPnum(1, self)._rawexp()
+            # bute-force calculation of exp(1) using augmented accuracy:
+            augfamily = FXfamily(self.fraction_bits + 8)
+            augexp = FXnum(1, augfamily)._rawexp()
+            self.exp1 = FXnum(augexp, self)
         return self.exp1
 
     def GetLog2(self):
         """return cached value of log(2)"""
         if self.log2 is None:
-            self.log2 = FPnum(2, self)._rawlog()
+            # bute-force calculation of log(2) using augmented accuracy:
+            augfamily = FXfamily(self.fraction_bits + 8)
+            auglog2 = FXnum(2, augfamily)._rawlog()
+            self.log2 = FXnum(auglog2, self)
         return self.log2
+
+    def GetPi(self):
+        """return cached value of pi"""
+        if self.Pi is None:
+            # bute-force calculation of 8*atan(pi/8) using augmented accuracy:
+            augfamily = FXfamily(self.fraction_bits + 8)
+            rt2 = FXnum(2, augfamily).sqrt()
+            tan8 = (rt2 - 1)
+            augpi = 8 * tan8._rawarctan()
+            self.Pi = FXnum(augpi, self)
+        return self.Pi
 
     def Convert(self, other, other_val):
         """convert number from different number of fraction-bits"""
@@ -77,27 +99,28 @@ class FPfamily(object):
         elif bit_inc > 0:
             new_val = other_val << bit_inc
             if other_val > 0:
-                new_val |= 1 << (bit_inc - 1)
+                new_val |= 1L << (bit_inc - 1)
             else:
-                new_val |= ((1 << (bit_inc -1)) - 1)
+                new_val |= ((1L << (bit_inc -1)) - 1)
             return new_val
         else:
             return (other_val >> -bit_inc)
+# ^^^ class FXfamily ^^^
 
-_defaultFamily = FPfamily()
-
-
-
-class FPexception(TypeError):
-    """Signal that family-types of FPnums in binary operation are mismatched"""
+_defaultFamily = FXfamily()
 
 
 
-class FPnum(object):
+class FXexception(TypeError):
+    """Signal that family-types of FXnums in binary operation are mismatched"""
+
+
+
+class FXnum(object):
     def __init__(self, val=0L, family=_defaultFamily):
-        assert isinstance(family, FPfamily)
+        assert isinstance(family, FXfamily)
         self.family = family
-        if isinstance(val, FPnum):
+        if isinstance(val, FXnum):
             self.scaledval = family.Convert(val.family, val.scaledval)
         elif isinstance(val, list):
             sval = val[0]
@@ -106,7 +129,7 @@ class FPnum(object):
             self.scaledval = long(val * family.scale)
 
     def __repr__(self):
-        return 'FPnum([%d], %s)' % (self.scaledval, self.family.__repr__())
+        return 'FXnum([%d], %s)' % (self.scaledval, self.family.__repr__())
 
     # converstion operations:
     def __int__(self):
@@ -122,20 +145,20 @@ class FPnum(object):
         return float(self.scaledval) / float(self.family.scale)
 
     def _CastOrFail_(self, other):
-        """turn number into FPnum or check that it is in same family"""
-        if isinstance(other, FPnum):
+        """turn number into FXnum or check that it is in same family"""
+        if isinstance(other, FXnum):
             # binary operations must involve members of same family
             if not self.family is other.family:
-                raise FPexception, 1
+                raise FXexception, 1
         else:
-            # automatic casting from types other than FPnum is allowed:
-            other = FPnum(other, self.family)
+            # automatic casting from types other than FXnum is allowed:
+            other = FXnum(other, self.family)
         return other
 
     # unary arithmetic operations:
     def __neg__(self):
         """Change sign"""
-        new = FPnum()
+        new = FXnum()
         new.scaledval = -self.scaledval
         return new
 
@@ -178,42 +201,42 @@ class FPnum(object):
     def __add__(self, other):
         """Add another number"""
         other = self._CastOrFail_(other)
-        new = FPnum(family=self.family)
+        new = FXnum(family=self.family)
         new.scaledval = self.scaledval + other.scaledval
         return new
 
     def __radd__(self, other):
-        return FPnum(other, self.family) + self
+        return FXnum(other, self.family) + self
 
     def __sub__(self, other):
         """Subtract another number"""
         other = self._CastOrFail_(other)
-        new = FPnum(family=self.family)
+        new = FXnum(family=self.family)
         new.scaledval = self.scaledval - other.scaledval
         return new
 
     def __rsub__(self, other):
-        return FPnum(other, self.family) - self
+        return FXnum(other, self.family) - self
 
     def __mul__(self, other):
         """Multiply by another number"""
         other = self._CastOrFail_(other)
-        new = FPnum(family=self.family)
+        new = FXnum(family=self.family)
         new.scaledval = (self.scaledval * other.scaledval + self.family.round) / self.family.scale
         return new
 
     def __rmul__(self, other):
-        return FPnum(other, self.family) * self
+        return FXnum(other, self.family) * self
 
     def __div__(self, other):
         """Divide by another number"""
         other = self._CastOrFail_(other)
-        new = FPnum(family=self.family)
+        new = FXnum(family=self.family)
         new.scaledval = (self.scaledval * self.family.scale + self.family.round) / other.scaledval
         return new
 
     def __rdiv__(self, other):
-        return FPnum(other, self.family) / self
+        return FXnum(other, self.family) / self
 
     # printing/converstion routines:
     def __str__(self):
@@ -241,10 +264,10 @@ class FPnum(object):
     def __pow__(self, other, modulus=None):
         assert modulus is None
         if self == 0:
-            return FPnum(1, self.family)
+            return FXnum(1, self.family)
         if isinstance(other, int) or isinstance(other, long):
             ipwr = other
-            frac = FPnum(1, self.family)
+            frac = FXnum(1, self.family)
         else:
             ipwr = long(other)
             frac = ((other - ipwr) * self.log()).exp()
@@ -257,7 +280,7 @@ class FPnum(object):
         if pwr < 0:
             pwr *= -1
             invert = True
-        result = FPnum(1, self.family)
+        result = FXnum(1, self.family)
         term = self
         while pwr != 0:
             if pwr & 1:
@@ -265,14 +288,14 @@ class FPnum(object):
             pwr >>= 1
             term *= term
         if invert:
-            result = FPnum(1, self.family) / result
+            result = FXnum(1, self.family) / result
         return result
 
     def sqrt(self):
         """Compute square-root of given number"""
         # calculate crude initial approximation:
         assert self.scaledval >= 0
-        rt = FPnum(family=self.family)
+        rt = FXnum(family=self.family)
         rt.scaledval = 1L << (self.family.fraction_bits / 2)
         val = self.scaledval
         while val > 0:
@@ -291,19 +314,20 @@ class FPnum(object):
         return (self - pwr)._rawexp() * (self.family.GetExp1() ** pwr)
 
     def _rawexp(self):
-        ex = FPnum(1, self.family)
-        term = FPnum(1, self.family)
-        idx = FPnum(1, self.family)
+        """Computer exponential of given number (assumed smallish)"""
+        ex = FXnum(1, self.family)
+        term = FXnum(1, self.family)
+        idx = FXnum(1, self.family)
         while True:
             term *= self / idx
             ex += term
-            idx += FPnum(1, self.family)
+            idx += FXnum(1, self.family)
             if term.scaledval == 0: break
         return ex
 
     def log(self):
         """Compute (natural) logarithm of given number"""
-        thresh = FPnum(2, self.family)
+        thresh = FXnum(2, self.family)
         assert self.scaledval > 0
         count = 0
         val = self
@@ -316,7 +340,8 @@ class FPnum(object):
         return val._rawlog() + count * self.family.GetLog2()
 
     def _rawlog(self):
-        lg = FPnum(0, self.family)
+        """Compute (natural) logarithm of given number (assumed close to 1)"""
+        lg = FXnum(0, self.family)
         z = (self - 1) / (self + 1)
         z2 = z * z
         term = 2 * z
@@ -336,9 +361,9 @@ class FPnum(object):
             (sn, cs) = (self / 2).sincos()
             return ((2 * sn * cs), ((cs - sn) * (cs + sn)))
 
-        sn = FPnum(0, self.family)
-        cs = FPnum(1, self.family)
-        term = FPnum(1, self.family)
+        sn = FXnum(0, self.family)
+        cs = FXnum(1, self.family)
+        term = FXnum(1, self.family)
         idx = 1
         while (True):
             term *= self / idx
@@ -356,6 +381,43 @@ class FPnum(object):
             if term.scaledval == 0: break
         return (sn, cs)
 
+    def _rawarctan(self):
+        """Compute inverse-tangent of given number (for |self|<1)"""
+        atn = 1
+        x2 = self * self
+        omx2 = 1 - x2
+        opx2 = 1 + x2
+        x4 = x2 * x2
+        term = x2
+        idx = 1
+        while True:
+            delta = term * (4 * idx * omx2 + opx2) / (16 * idx * idx - 1)
+            atn -= delta
+            term *= x4
+            idx += 1
+            if delta.scaledval == 0: break
+        return self * atn
+# ^^^ class FXnum ^^^
+
+
+class FPnum(FXnum):
+    """Backwards-compatibility class following name-change from FPnum to FXnum.
+    The name-change was prompted in anticipation of future support for
+    floating-point numbers within a similar framework, for which the
+    abbreviation 'FPnum' would have been ambiguous."""
+
+    count = 0
+    def __init__(self, val=0L, family=_defaultFamily):
+        FXnum.__init__(self, val, family)
+        FPnum.count += 1
+        if FPnum.count == 1:
+            import sys
+            print >> sys.stderr, \
+                '/**** spfpm-0.3 (FixedPoint) **************\\\n' \
+                '| PLEASE NOTE:                             |\n' \
+                '| The classname "FPnum" is now deprecated. |\n' \
+                '| Please use "FXnum" instead. Thanks.      |\n' \
+                '\\******************************************/'
 
 
 if __name__ == "__main__":

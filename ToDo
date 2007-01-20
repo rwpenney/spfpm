@@ -1,5 +1,5 @@
-Add support for fixed total number of bits
-Add mechanism for calculating Pi to current precision
 Add support for arctan etc
+Add auto-installation mechanism
+Add support for fixed total number of bits
 
 ## $Revision$, $Date$

@@ -1,5 +1,12 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+20Jan06	- added unit-test for resolution-conversions
+	added _rawarctan() method
+	added GetPi() method to FXfamily
+	adjusted FXfamily to use greater bit-count when finding cached constants
+
+19Jan06	- changed classname 'FPnum' to 'FXnum' to avoid abbreviation-clash with 'Floating Point'
+
 18Jan06	- added unit-test for __str__ method
 
 17Jan06	- converted resolution information to shareable FPfamily object

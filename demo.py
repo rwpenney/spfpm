@@ -10,11 +10,11 @@ import FixedPoint
 if __name__ == "__main__":
     # basic demonstration of roots & exponents at various accuracies:
     for resolution in [8, 32, 80, 274]:
-        family = FixedPoint.FPfamily(resolution)
+        family = FixedPoint.FXfamily(resolution)
         val = 2
 
         print '=== ' + str(resolution) + 'bits ==='
-        rt = FixedPoint.FPnum(val, family).sqrt()
+        rt = FixedPoint.FXnum(val, family).sqrt()
         print 'sqrt(' + str(val) + ')~ ' + str(rt)
         print 'sqrt(' +str(val) + ')^2 ~ ' + str(rt * rt)
         print 'exp(1) = ', FixedPoint.FPnum(1, family).exp()
