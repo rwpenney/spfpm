@@ -5,4 +5,5 @@ Makefile
 README
 ToDo
 FixedPoint.py
+demo.py
 test/testFixedPoint.py

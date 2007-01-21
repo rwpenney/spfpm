@@ -17,5 +17,5 @@ if __name__ == "__main__":
         rt = FixedPoint.FXnum(val, family).sqrt()
         print 'sqrt(' + str(val) + ')~ ' + str(rt)
         print 'sqrt(' +str(val) + ')^2 ~ ' + str(rt * rt)
-        print 'exp(1) = ', FixedPoint.FPnum(1, family).exp()
+        print 'exp(1) = ', FixedPoint.FXnum(1, family).exp()
         print

@@ -289,12 +289,12 @@ class FixedPointTest(unittest.TestCase):
 
 
     def testArctan(self):
-        """arctan methods agree with math.sin/cos"""
+        """atan method agree with math.sin/cos"""
         scale = 0.277
         for i in range(-32, 32):
             tan = i * scale
             ang_true = math.atan(tan)
-            ang = FixedPoint.FXnum(tan).arctan()
+            ang = FixedPoint.FXnum(tan).atan()
             self.assertAlmostEqual(ang_true, ang)
 
 

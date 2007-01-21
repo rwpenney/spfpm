@@ -36,6 +36,14 @@ Note:
 """
 
 class FXfamily(object):
+    """This class defines the fixed-point resolution of a set of FXnum objects.
+    All arithmetic operations between FXnum objects that are
+    not explicitly cast into a different FXfamily
+    must share the same FXfamily.
+    Multiple FXfamily objects can exist within the same application so that,
+    for example, sets of 12-bit, 32-bit & 200-bit quantities
+    can be manipulated concurrently."""
+
     def __init__(self, n_bits=64):
         self.fraction_bits = n_bits         # bits to right of binary point
         self.scale = 1L << n_bits
@@ -60,6 +68,7 @@ class FXfamily(object):
             return true
 
     def GetResolution(self):
+        """Find the number of fractional binary digits"""
         return self.fraction_bits
 
     def GetExp1(self):
@@ -404,7 +413,12 @@ class FXnum(object):
             if term.scaledval == 0: break
         return (sn, cs)
 
-    def arctan(self):
+    def tan(self):
+        """Compute tangent of given number (as angle in radians)"""
+        (sn, cs) = self.sincos()
+        return sn / cs
+
+    def atan(self):
         """Compute inverse-tangent of given number (as angle in radians)"""
         reflect = False
         recip = False

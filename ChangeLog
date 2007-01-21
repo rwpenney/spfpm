@@ -1,6 +1,9 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+21Jan07	- *** spfpm-0.3 released
+
 21Jan06	- added backwards-compatibility SetFraction method to FPnum wrapper
+	renamed arctan() method to atan() to agree with math-module convention
 
 20Jan06	- added unit-test for resolution-conversions
 	added arctan & _rawarctan() methods
