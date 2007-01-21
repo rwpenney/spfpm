@@ -314,7 +314,7 @@ class FXnum(object):
         return (self - pwr)._rawexp() * (self.family.GetExp1() ** pwr)
 
     def _rawexp(self):
-        """Computer exponential of given number (assumed smallish)"""
+        """Brute-force exponential of given number (assumed smallish)"""
         ex = FXnum(1, self.family)
         term = FXnum(1, self.family)
         idx = FXnum(1, self.family)
@@ -353,14 +353,37 @@ class FXnum(object):
             if term.scaledval == 0: break
         return lg
 
-
     def sincos(self):
         """Compute sine & cosine of given number (as angle in radians)"""
-        # use double-angle formulae to avoid series with large argument:
-        if self.scaledval > 2*self.family.scale or self.scaledval < -2*self.family.scale:
-            (sn, cs) = (self / 2).sincos()
-            return ((2 * sn * cs), ((cs - sn) * (cs + sn)))
+        reflect = False
+        ang = self
+        if ang < 0:
+            ang *= -1
+            reflect = True
+        # find nearest multiple of pi/2:
+        halfpi = self.family.GetPi() / 2
+        idx = int(ang / halfpi + 0.5)
+        # compute sin/cos of offset from nearest pi/2
+        ang -= idx * halfpi
+        (osn, ocs) = ang._rawsincos()
+        # transform according to sin(ang+offset), cos(ang+offset):
+        idx = idx % 4
+        if idx == 0:
+            (sn, cs) = (osn, ocs)
+        elif idx == 1:
+            (sn, cs) = (ocs, -osn)
+        elif idx == 2:
+            (sn, cs) = (-osn, -ocs)
+        elif idx == 3:
+            (sn, cs) = (-ocs, osn)
+        else:
+            raise FXexception
+        if reflect:
+            sn *= -1
+        return (sn, cs)
 
+    def _rawsincos(self):
+        """Brute-force calculation of sine & cosine"""
         sn = FXnum(0, self.family)
         cs = FXnum(1, self.family)
         term = FXnum(1, self.family)
@@ -381,8 +404,32 @@ class FXnum(object):
             if term.scaledval == 0: break
         return (sn, cs)
 
+    def arctan(self):
+        """Compute inverse-tangent of given number (as angle in radians)"""
+        reflect = False
+        recip = False
+        double = False
+        tan = self
+        if tan < 0:
+            tan *= -1
+            reflect = True
+        if tan > 1:
+            tan = 1 / tan
+            recip = True
+        if tan > 0.414:
+            tan = ((1 + tan * tan).sqrt() - 1) / tan
+            double = True
+        ang = tan._rawarctan()
+        if double:
+            ang *= 2
+        if recip:
+            ang = self.family.GetPi() / 2 - ang
+        if reflect:
+            ang *= -1
+        return ang
+
     def _rawarctan(self):
-        """Compute inverse-tangent of given number (for |self|<1)"""
+        """Brute-force inverse-tangent of given number (for |self|<1)"""
         atn = 1
         x2 = self * self
         omx2 = 1 - x2
@@ -406,11 +453,13 @@ class FPnum(FXnum):
     floating-point numbers within a similar framework, for which the
     abbreviation 'FPnum' would have been ambiguous."""
 
-    count = 0
-    def __init__(self, val=0L, family=_defaultFamily):
+    count_init = 0
+    count_frac = 0
+    def __init__(self, val=0L, family=None):
+        if family is None: family = _defaultFamily
         FXnum.__init__(self, val, family)
-        FPnum.count += 1
-        if FPnum.count == 1:
+        FPnum.count_init += 1
+        if FPnum.count_init == 1:
             import sys
             print >> sys.stderr, \
                 '/**** spfpm-0.3 (FixedPoint) **************\\\n' \
@@ -418,6 +467,22 @@ class FPnum(FXnum):
                 '| The classname "FPnum" is now deprecated. |\n' \
                 '| Please use "FXnum" instead. Thanks.      |\n' \
                 '\\******************************************/'
+
+    def SetFraction(n_bits=32):
+        global _defaultFamily
+        _defaultFamily = FXfamily(n_bits)
+        FPnum.count_frac += 1
+        if FPnum.count_frac == 1:
+            import sys
+            print >> sys.stderr, \
+                '/**** spfpm-0.3 (FixedPoint) **************************\\\n' \
+                '| PLEASE NOTE:                                         |\n' \
+                '| The "FPnum.SetFraction()" method has been superseded |\n' \
+                '| by the FXfamily class, which allows                  |\n' \
+                '| multiple resolutions to coexist.                     |\n' \
+                '| Please use "FXfamily" instead. Thanks.               |\n' \
+                '\\******************************************************/'
+    SetFraction = staticmethod(SetFraction)
 
 
 if __name__ == "__main__":

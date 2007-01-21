@@ -1,11 +1,15 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+21Jan06	- added backwards-compatibility SetFraction method to FPnum wrapper
+
 20Jan06	- added unit-test for resolution-conversions
-	added _rawarctan() method
+	added arctan & _rawarctan() methods
+	adjusted sincos() method to reduce angles moduli Pi rather than halving
 	added GetPi() method to FXfamily
 	adjusted FXfamily to use greater bit-count when finding cached constants
 
-19Jan06	- changed classname 'FPnum' to 'FXnum' to avoid abbreviation-clash with 'Floating Point'
+19Jan06	- changed 'FPnum' to 'FXnum' to avoid abbreviation-clash with 'Floating Point'
+	added FPnum backward-compatibility wrapper
 
 18Jan06	- added unit-test for __str__ method
 
