@@ -23,9 +23,9 @@ class FixedPointTest(unittest.TestCase):
             for step in range(1, 5):
                 for inc in range(1, base):
                     pos = long((base * step) + inc)
-                    self.assertEqual(long(step), (pos / base))
+                    self.assertEqual(long(step), (pos // base))
                     neg = long((base * -step) - inc)
-                    self.assertEqual(long(-step - 1), (neg / base))
+                    self.assertEqual(long(-step - 1), (neg // base))
 
 
     def testBoolConditions(self):
@@ -99,6 +99,17 @@ class FixedPointTest(unittest.TestCase):
                 fpa = "%.8g" % x
                 fpx = str(FixedPoint.FXnum(x))
                 self.assertEqual(fpa, fpx)
+
+    def testNegating(self):
+        """check prefix operators"""
+        for i in range(-32, 32):
+            x = i * 0.819
+            fx = FixedPoint.FXnum(x)
+            zero = FixedPoint.FXnum(0)
+            self.assertEqual(zero, fx + (-fx))
+            self.assertEqual(zero, -fx + fx)
+            self.assertEqual((-1 * fx), -fx)
+            self.assertEqual(zero, (-1 * fx) + (-fx) + 2 * (+fx))
 
     def testAddition(self):
         """addition operators should promote & commute"""
@@ -244,7 +255,7 @@ class FixedPointTest(unittest.TestCase):
         for i in range(1, 32):
             for j in range(0,2):
                 if j == 0:
-                    x = 1 / (base ** i)
+                    x = 1.0 / (base ** i)
                 else:
                     x = base ** i
                 log_true = math.log(x)

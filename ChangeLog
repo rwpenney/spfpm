@@ -1,5 +1,13 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+27Jan07	- extended discusions + examples in documentation
+	added doctest.testmod() test for documentation
+	added __abs__, __pos__, __hash__() methods
+	changed default distribution-format to .zip in place of .tar.gz
+
+22Jan07	- neatened internal usage of truncating division
+	wired-together __div__ & __truediv__ operators
+
 21Jan07	- *** spfpm-0.3 released
 
 21Jan06	- added backwards-compatibility SetFraction method to FPnum wrapper

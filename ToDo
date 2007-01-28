@@ -2,5 +2,6 @@ Add auto-installation mechanism
 Add support for fixed total number of bits
 Improve treatment of rounding-errors on truncated Taylor-series
 Improve estimate of augmented resolution needed in cached pi, e etc
+Remove FPnum compatibility-layer after spfpm-0.4 is released
 
 ## $Revision$, $Date$

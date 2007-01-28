@@ -12,19 +12,54 @@
 # and bug-fixes via: rwpenney 'AT' users 'DOT' sourceforge 'DOT' net
 
 
-"""Simple fixed-point numerical class
+"""
+The Simple Python Fixed-Point Module (SPFPM) provides objects of types
+FXnum and FXfamily which implement basic mathematical operations
+on fixed-point binary numbers (i.e. having a fixed number of
+fractional binary digits, with an arbitrary number of integer digits).
 
-Creation:
-    x = FXnum(2)
-    y = FXnum(1.2, FXfamily(n_bits=108))
+FXnum objects exist within a user-controllable collection of families managed
+by the FXfamily class, which sets the number of fractional digits for
+each family. This can be used, for example to ensure that a set of
+8-bit quantities can be manipulated consistently and kept separate from
+a set of 200-bit quantities in the same program. Conversion between
+FXnum objects in different families is supported, but solely through
+an explicit cast.
 
-Manipulation:
-    x *= 2
-    rt = x.sqrt()
+>>> x = FXnum(2.1)                  # default FXfamily, with 64-bits
+>>> print x
+2.100000000000000088817
+>>> x = FXnum(21) / 10              # fractional error ~1/2^64 or ~5e-20
+>>> print x
+2.099999999999999999967
+>>> rx = x.sqrt()                   # rx created in same family as x
+>>> print rx
+1.449137674618943857354
+>>> v = x + 2 * rx
+>>> print v
+4.998275349237887714675
 
-Output:
-    print x, rt
-    q = float(x)
+>>> y = FXnum(3.2, FXfamily(12))    # lower-precision 12-bit number
+>>> ly = y.log()                    # ly created in same family as y
+>>> print ly                        # fractional error ~1/2^12 or ~2e-4
+1.1628
+>>> print ly.exp()
+3.1987
+>>> fy = float(y)
+>>> print fy
+3.19995117188
+
+>>> # a = x + y                     # throws exception - different families
+>>> a = x + FXnum(y, _defaultFamily)
+>>> print a
+5.300073242187499999967
+>>> b = rx + x                      # ok - same families
+>>> # c = rx + ly                   # throws exception - different families
+>>> d = ly + y                      # ok - same families
+
+>>> fam = FXfamily(200)
+>>> print fam.GetPi()
+3.141592653589793238462643383279502884197169399375105820974944478108
 
 Note:
     Be careful not to assume that a large number of fractional bits within
@@ -33,6 +68,8 @@ Note:
     magnifying mere rounding errors in their inputs into significant errors
     in their outputs. This is a fact of life with any approximation to
     real arithmetic using finite-precision quantities.
+
+SPFPM is provided as-is, and with no warranty of any form.
 """
 
 class FXfamily(object):
@@ -51,6 +88,9 @@ class FXfamily(object):
         self.exp1 = None                    # cache of exp(1)
         self.log2 = None                    # cache of log(2)
         self.Pi = None                      # cache of 3.14159...
+
+    def __hash__(self):
+        return hash(self.fraction_bits)
 
     def __repr__(self):
         return 'FXfamily(%d)' % (self.fraction_bits)
@@ -137,17 +177,20 @@ class FXnum(object):
         else:
             self.scaledval = long(val * family.scale)
 
+    def __hash__(self):
+        return hash(self.scaledval) ^ hash(self.family)
+
     def __repr__(self):
         return 'FXnum([%d], %s)' % (self.scaledval, self.family.__repr__())
 
-    # converstion operations:
+    # conversion operations:
     def __int__(self):
         """Cast to (plain) integer"""
-        return int((self.scaledval + self.family.round) / self.family.scale)
+        return int((self.scaledval + self.family.round) // self.family.scale)
 
     def __long__(self):
         """Cast to long integer"""
-        return long((self.scaledval + self.family.round) / self.family.scale)
+        return long((self.scaledval + self.family.round) // self.family.scale)
 
     def __float__(self):
         """Cast to floating-point"""
@@ -165,11 +208,22 @@ class FXnum(object):
         return other
 
     # unary arithmetic operations:
+    def __abs__(self):
+        """Modulus"""
+        if self.scaledval < 0:
+            return -self
+        else:
+            return self
+
     def __neg__(self):
         """Change sign"""
         new = FXnum()
         new.scaledval = -self.scaledval
         return new
+
+    def __pos__(self):
+        """Identity operation"""
+        return self
 
     # arithmetic comparison tests:
     def __eq__(self, other):
@@ -231,21 +285,23 @@ class FXnum(object):
         """Multiply by another number"""
         other = self._CastOrFail_(other)
         new = FXnum(family=self.family)
-        new.scaledval = (self.scaledval * other.scaledval + self.family.round) / self.family.scale
+        new.scaledval = (self.scaledval * other.scaledval + self.family.round) // self.family.scale
         return new
 
     def __rmul__(self, other):
         return FXnum(other, self.family) * self
 
-    def __div__(self, other):
-        """Divide by another number"""
+    def __truediv__(self, other):
+        """Divide by another number (without truncation)"""
         other = self._CastOrFail_(other)
         new = FXnum(family=self.family)
-        new.scaledval = (self.scaledval * self.family.scale + self.family.round) / other.scaledval
+        new.scaledval = (self.scaledval * self.family.scale + self.family.round) // other.scaledval
         return new
+    __div__ = __truediv__
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         return FXnum(other, self.family) / self
+    __rdiv__ = __rtruediv__
 
     # printing/converstion routines:
     def __str__(self):
@@ -255,15 +311,15 @@ class FXnum(object):
         if self.scaledval < 0:
             rep = '-'
             val *= -1
-        whole = val / self.family.scale
+        whole = val // self.family.scale
         frac = val - self.family.scale * whole
         rep += str(whole)
         if frac != 0:
             rep += '.'
             idx = 0
-            while idx < (self.family.fraction_bits / 3) and frac != 0:
+            while idx < (self.family.fraction_bits // 3) and frac != 0:
                 frac *= 10L
-                q = frac / self.family.scale
+                q = frac // self.family.scale
                 rep += str(q)
                 frac -= q * self.family.scale
                 idx += 1
@@ -271,6 +327,7 @@ class FXnum(object):
 
     # mathematical functions:
     def __pow__(self, other, modulus=None):
+        """evaluate self ^ other"""
         assert modulus is None
         if self == 0:
             return FXnum(1, self.family)
@@ -281,6 +338,9 @@ class FXnum(object):
             ipwr = long(other)
             frac = ((other - ipwr) * self.log()).exp()
         return self.intpower(ipwr) * frac
+
+    def __rpow__(self, other):
+        return FXnum(other, self.family) ** self
 
     def intpower(self, pwr):
         """compute integer power by repeated squaring"""
@@ -305,7 +365,7 @@ class FXnum(object):
         # calculate crude initial approximation:
         assert self.scaledval >= 0
         rt = FXnum(family=self.family)
-        rt.scaledval = 1L << (self.family.fraction_bits / 2)
+        rt.scaledval = 1L << (self.family.fraction_bits // 2)
         val = self.scaledval
         while val > 0:
             val >>= 2
@@ -476,11 +536,12 @@ class FPnum(FXnum):
         if FPnum.count_init == 1:
             import sys
             print >> sys.stderr, \
-                '/**** spfpm-0.3 (FixedPoint) **************\\\n' \
-                '| PLEASE NOTE:                             |\n' \
-                '| The classname "FPnum" is now deprecated. |\n' \
-                '| Please use "FXnum" instead. Thanks.      |\n' \
-                '\\******************************************/'
+                '/**** spfpm-0.4 (FixedPoint) **************************\\\n' \
+                '| PLEASE NOTE:                                         |\n' \
+                '| The classname "FPnum" is now deprecated.             |\n' \
+                '| Please use "FXnum" instead. Thanks.                  |\n' \
+                '| THIS COMPATIBILTY-LAYER WILL BE REMOVED in SPFPM-0.5 |\n' \
+                '\\******************************************************/'
 
     def SetFraction(n_bits=32):
         global _defaultFamily
@@ -489,7 +550,7 @@ class FPnum(FXnum):
         if FPnum.count_frac == 1:
             import sys
             print >> sys.stderr, \
-                '/**** spfpm-0.3 (FixedPoint) **************************\\\n' \
+                '/**** spfpm-0.4 (FixedPoint) **************************\\\n' \
                 '| PLEASE NOTE:                                         |\n' \
                 '| The "FPnum.SetFraction()" method has been superseded |\n' \
                 '| by the FXfamily class, which allows                  |\n' \
@@ -500,4 +561,5 @@ class FPnum(FXnum):
 
 
 if __name__ == "__main__":
-    pass
+    import doctest
+    doctest.testmod()

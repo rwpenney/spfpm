@@ -2,11 +2,11 @@
 # $Revision$, $Date$
 # RW Penney, January 2007
 
-VERSION=	0.2
+VERSION=	0.4
 
-.PHONY:	dist-gzip
-dist-gzip:
+.PHONY:	dist-zip
+dist-zip:
 	mkdir spfpm-${VERSION}
 	tar -cf - `cat distfiles` | ( cd spfpm-${VERSION}; tar -xpf - )
-	tar -zcf spfpm-${VERSION}.tar.gz ./spfpm-${VERSION}
+	zip -r spfpm-${VERSION}.zip ./spfpm-${VERSION}
 	rm -rf spfpm-${VERSION}
