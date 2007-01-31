@@ -69,7 +69,7 @@ Note:
     in their outputs. This is a fact of life with any approximation to
     real arithmetic using finite-precision quantities.
 
-SPFPM is provided as-is, and with no warranty of any form.
+SPFPM is provided as-is, with no warranty of any form.
 """
 
 class FXfamily(object):
@@ -217,7 +217,7 @@ class FXnum(object):
 
     def __neg__(self):
         """Change sign"""
-        new = FXnum()
+        new = FXnum(family=self.family)
         new.scaledval = -self.scaledval
         return new
 
@@ -422,8 +422,64 @@ class FXnum(object):
             if term.scaledval == 0: break
         return lg
 
+    def sin(self):
+        """Compute sine of given number (as angle in radians)"""
+        (ang, idx, reflect) = self._angnorm()
+        idx = idx % 4
+        if idx == 0: sn = ang._rawQsine(False)
+        elif idx == 1: sn = ang._rawQsine(True)
+        elif idx == 2: sn = -ang._rawQsine(False)
+        elif idx == 3: sn = -ang._rawQsine(True)
+        else: raise FXexception
+        if reflect: sn *= -1
+        return sn
+
+    def asin(self):
+        """Compute inverse sine of given number"""
+        if self == 1:
+            return self.family.GetPi() / 2
+        else:
+            cs2 = 1 - self * self
+            assert cs2 > 0
+            return (self / cs2.sqrt()).atan()
+
+    def cos(self):
+        """Compute cosine of given number (as angle in radians)"""
+        (ang, idx, reflect) = self._angnorm()
+        idx = idx % 4
+        if idx == 0: cs = ang._rawQsine(True)
+        elif idx == 1: cs = -ang._rawQsine(False)
+        elif idx == 2: cs = -ang._rawQsine(True)
+        elif idx == 3: cs = ang._rawQsine(False)
+        else: raise FXexception
+        return cs
+
+    def acos(self):
+        """Compute inverse sine of given number"""
+        if self == 1:
+            return FXnum(0, self.family)
+        else:
+            sn2 = 1 - self * self
+            assert sn2 > 0
+            return (sn2.sqrt() / self).atan()
+
     def sincos(self):
         """Compute sine & cosine of given number (as angle in radians)"""
+        (ang, idx, reflect) = self._angnorm()
+        osn = ang._rawQsine(False)
+        ocs = ang._rawQsine(True)
+        # transform according to sin(ang+offset), cos(ang+offset):
+        idx = idx % 4
+        if idx == 0: (sn, cs) = (osn, ocs)
+        elif idx == 1: (sn, cs) = (ocs, -osn)
+        elif idx == 2: (sn, cs) = (-osn, -ocs)
+        elif idx == 3: (sn, cs) = (-ocs, osn)
+        else: raise FXexception
+        if reflect: sn *= -1
+        return (sn, cs)
+
+    def _angnorm(self):
+        """helper function for reducing angle modulo 2.Pi"""
         reflect = False
         ang = self
         if ang < 0:
@@ -431,47 +487,27 @@ class FXnum(object):
             reflect = True
         # find nearest multiple of pi/2:
         halfpi = self.family.GetPi() / 2
-        idx = int(ang / halfpi + 0.5)
-        # compute sin/cos of offset from nearest pi/2
+        idx = long(ang / halfpi + 0.5)
         ang -= idx * halfpi
-        (osn, ocs) = ang._rawsincos()
-        # transform according to sin(ang+offset), cos(ang+offset):
-        idx = idx % 4
-        if idx == 0:
-            (sn, cs) = (osn, ocs)
-        elif idx == 1:
-            (sn, cs) = (ocs, -osn)
-        elif idx == 2:
-            (sn, cs) = (-osn, -ocs)
-        elif idx == 3:
-            (sn, cs) = (-ocs, osn)
-        else:
-            raise FXexception
-        if reflect:
-            sn *= -1
-        return (sn, cs)
+        return (ang, idx, reflect)
 
-    def _rawsincos(self):
-        """Brute-force calculation of sine & cosine"""
+    def _rawQsine(self, doCos=False, doHyp=False):
+        """helper function for brute-force calculation of sine & cosine"""
         sn = FXnum(0, self.family)
-        cs = FXnum(1, self.family)
+        if doHyp:
+            x2 = self * self
+        else:
+            x2 = -self * self
         term = FXnum(1, self.family)
-        idx = 1
-        while (True):
-            term *= self / idx
-            if (idx % 2) == 0:
-                if (idx % 4) == 0:
-                    cs += term
-                else:
-                    cs -= term
-            else:
-                if (idx % 4) == 1:
-                    sn += term
-                else:
-                    sn -= term
-            idx += 1
+        if doCos: idx = 1
+        else: idx = 2
+        while True:
+            sn += term
+            term *= x2 / (idx * (idx + 1))
+            idx += 2
             if term.scaledval == 0: break
-        return (sn, cs)
+        if doCos: return sn
+        else: return self * sn
 
     def tan(self):
         """Compute tangent of given number (as angle in radians)"""

@@ -102,14 +102,18 @@ class FixedPointTest(unittest.TestCase):
 
     def testNegating(self):
         """check prefix operators"""
+        fam17 = FixedPoint.FXfamily(17)
         for i in range(-32, 32):
             x = i * 0.819
-            fx = FixedPoint.FXnum(x)
-            zero = FixedPoint.FXnum(0)
-            self.assertEqual(zero, fx + (-fx))
-            self.assertEqual(zero, -fx + fx)
-            self.assertEqual((-1 * fx), -fx)
-            self.assertEqual(zero, (-1 * fx) + (-fx) + 2 * (+fx))
+            fx = FixedPoint.FXnum(x, fam17)
+            zero = FixedPoint.FXnum(0, fam17)
+            try:
+                self.assertEqual(zero, fx + (-fx))
+                self.assertEqual(zero, -fx + fx)
+                self.assertEqual((-1 * fx), -fx)
+                self.assertEqual(zero, (-1 * fx) + (-fx) + 2 * (+fx))
+            except FixedPoint.FXexception:
+                self.fail()
 
     def testAddition(self):
         """addition operators should promote & commute"""
@@ -192,15 +196,16 @@ class FixedPointTest(unittest.TestCase):
 
     def testDivision(self):
         """division operators should promote & inverse-commute"""
+        fam62 = FixedPoint.FXfamily(62)
         scale = 0.125
         scale2 = scale * scale
         for a in range(-32, 32):
             if a == 0: continue
-            fpa = FixedPoint.FXnum(a * scale)
+            fpa = FixedPoint.FXnum(a * scale, fam62)
             for y in range(-16, 16):
                 if y == 0: continue
-                fpy = FixedPoint.FXnum(y * scale)
-                fpx = FixedPoint.FXnum((y * a) * scale2)
+                fpy = FixedPoint.FXnum(y * scale, fam62)
+                fpx = FixedPoint.FXnum((y * a) * scale2, fam62)
 
                 # compute various forms of a = (x / y):
 
@@ -240,17 +245,18 @@ class FixedPointTest(unittest.TestCase):
 
     def testExp(self):
         """exponent method agree with math.exp"""
+        fam62 = FixedPoint.FXfamily(62)
         scale = 0.23
         for i in range(-32, 32):
             x = i * scale
             exp_true = math.exp(x)
-            exp = FixedPoint.FXnum(x).exp()
+            exp = FixedPoint.FXnum(x, fam62).exp()
             self.assertAlmostEqual(exp_true, exp)
 
 
     def testLog(self):
         """logarithm method agree with math.log"""
-        """exp and log methods should be inverses & agree with math.*"""
+        fam62 = FixedPoint.FXfamily(62)
         base = 1.5
         for i in range(1, 32):
             for j in range(0,2):
@@ -259,53 +265,60 @@ class FixedPointTest(unittest.TestCase):
                 else:
                     x = base ** i
                 log_true = math.log(x)
-                log = FixedPoint.FXnum(x).log()
+                log = FixedPoint.FXnum(x, fam62).log()
                 self.assertAlmostEqual(log_true, log)
 
 
     def testExpLog(self):
         """exp and log methods should be inverses & agree with math.*"""
+        fam62 = FixedPoint.FXfamily(62)
         scale = 0.27
         for i in range(-32, 32):
             x = i * scale
-            exp = FixedPoint.FXnum(x).exp()
+            exp = FixedPoint.FXnum(x, fam62).exp()
             logexp = exp.log()
             self.assertAlmostEqual(x, float(logexp))
 
 
     def testPow(self):
+        fam62 = FixedPoint.FXfamily(62)
         scale = 0.205
         scale2 = 0.382
         for i in range(1, 32):
             x = i * scale
-            pow = FixedPoint.FXnum(0) ** x
-            self.assertEqual(FixedPoint.FXnum(1), pow)
+            pow = FixedPoint.FXnum(0, fam62) ** x
+            self.assertEqual(FixedPoint.FXnum(1, fam62), pow)
             for j in range(-16, 16):
                 y = j * scale2
                 pow_true = math.pow(x, y)
-                pow = FixedPoint.FXnum(x) ** y
+                pow = FixedPoint.FXnum(x, fam62) ** y
                 self.assertAlmostEqual(pow_true, pow)
 
 
     def testSinCos(self):
         """sin/cos methods agree with math.sin/cos"""
+        fam62 = FixedPoint.FXfamily(62)
         scale = 0.342
         for i in range(-32, 32):
             x = i * scale
             sin_true = math.sin(x)
             cos_true = math.cos(x)
-            (sin, cos) = FixedPoint.FXnum(x).sincos()
+            fang = FixedPoint.FXnum(x, fam62)
+            (sin, cos) = fang.sincos()
             self.assertAlmostEqual(sin_true, sin)
             self.assertAlmostEqual(cos_true, cos)
+            self.assertEqual(sin, fang.sin())
+            self.assertEqual(cos, fang.cos())
 
 
     def testArctan(self):
         """atan method agree with math.sin/cos"""
+        fam62 = FixedPoint.FXfamily(62)
         scale = 0.277
         for i in range(-32, 32):
             tan = i * scale
             ang_true = math.atan(tan)
-            ang = FixedPoint.FXnum(tan).atan()
+            ang = FixedPoint.FXnum(tan, fam62).atan()
             self.assertAlmostEqual(ang_true, ang)
 
 

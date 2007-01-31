@@ -1,5 +1,12 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+31Jan07	- added basic asin() & acos() methods
+
+30Jan07	- replaced _rawsincos() method with dual-mode _rawQsine() method
+	added sin() & cos() methods
+
+29Jan07	- patched spurious family-conversion in __neg__() operator
+
 27Jan07	- extended discusions + examples in documentation
 	added doctest.testmod() test for documentation
 	added __abs__, __pos__, __hash__() methods
