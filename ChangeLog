@@ -1,5 +1,9 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+02Feb07	- added demo/test/clean Makefile targets
+
+01Feb07	- added setup.py distutils-script
+
 31Jan07	- added basic asin() & acos() methods
 
 30Jan07	- replaced _rawsincos() method with dual-mode _rawQsine() method

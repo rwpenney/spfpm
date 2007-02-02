@@ -2,11 +2,28 @@
 # $Revision$, $Date$
 # RW Penney, January 2007
 
-VERSION=	0.4
+PYTHON=		python
+TEMPDIRS=	build dist
+TEMPFILES=	MANIFEST
 
-.PHONY:	dist-zip
-dist-zip:
-	mkdir spfpm-${VERSION}
-	tar -cf - `cat distfiles` | ( cd spfpm-${VERSION}; tar -xpf - )
-	zip -r spfpm-${VERSION}.zip ./spfpm-${VERSION}
-	rm -rf spfpm-${VERSION}
+.PHONY:	demo
+demo:
+	${PYTHON} demo.py
+
+.PHONY:	test
+test:
+	${PYTHON} FixedPoint.py
+	(cd test; ${PYTHON} testFixedPoint.py)
+
+.PHONY:	install
+install:
+	${PYTHON} setup.py install
+
+.PHONY:	all-dists
+all-dists:
+	python setup.py sdist --formats=gztar,zip
+
+.PHONY:	clean
+clean:
+	for dir in ${TEMPDIRS}; do test -d $${dir} && rm -rf $${dir}; done
+	for fl in ${TEMPFILES}; do test -f $${fl} && rm -f $${fl}; done
