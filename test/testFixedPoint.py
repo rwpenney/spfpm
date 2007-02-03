@@ -75,6 +75,7 @@ class FixedPointTest(unittest.TestCase):
             self.assertEqual(orig, x0)
             if x is x0: self.fail()
 
+
     def testConversion(self):
         """check that conversion between families preserves values"""
         famlist = [FixedPoint.FXfamily(b) for b in [32, 40, 48, 80, 120]]
@@ -86,10 +87,13 @@ class FixedPointTest(unittest.TestCase):
                     for fam1 in famlist:
                         fp1 = FixedPoint.FXnum(fp0, fam1)
                         try: f = (fp0 == fp1)
-                        except FixedPoint.FXexception: self.failIf(fam0 is fam1)
-                        else: self.failUnless(fam0 is fam1)
+                        except FixedPoint.FXfamilyError:
+                            self.failIf(fam0 is fam1)
+                        else:
+                            self.failUnless(fam0 is fam1)
                         self.assertAlmostEqual(x, float(fp0))
                         self.assertAlmostEqual(x, float(fp1))
+
 
     def testPrinting(self):
         """check conversion to string"""
@@ -99,6 +103,15 @@ class FixedPointTest(unittest.TestCase):
                 fpa = "%.8g" % x
                 fpx = str(FixedPoint.FXnum(x))
                 self.assertEqual(fpa, fpx)
+
+
+    def testIntCasts(self):
+        """rounding on casting to int/long should match float-conversions"""
+        for i in range(-40,40):
+            x = i / 8.0
+            self.assertEqual(int(x), int(FixedPoint.FXnum(x)))
+            self.assertEqual(long(x), long(FixedPoint.FXnum(x)))
+
 
     def testNegating(self):
         """check prefix operators"""
@@ -114,6 +127,7 @@ class FixedPointTest(unittest.TestCase):
                 self.assertEqual(zero, (-1 * fx) + (-fx) + 2 * (+fx))
             except FixedPoint.FXexception:
                 self.fail()
+
 
     def testAddition(self):
         """addition operators should promote & commute"""
@@ -223,6 +237,7 @@ class FixedPointTest(unittest.TestCase):
                 tmp = fpx / float(y * scale)
                 self.assertAlmostEqual(fpa, tmp)
 
+
     def testFamilyProtection(self):
         """check that arithmetic operators do not transmute resolution families"""
         famlist = [FixedPoint.FXfamily(res) for res in [8, 16, 40, 90]]
@@ -231,20 +246,39 @@ class FixedPointTest(unittest.TestCase):
                 x = FixedPoint.FXnum(2, fam0)
                 y = FixedPoint.FXnum(3, fam1)
                 try: a = x + y
-                except FixedPoint.FXexception: self.failIf(fam0 is fam1)
+                except FixedPoint.FXfamilyError: self.failIf(fam0 is fam1)
                 else: self.failUnless(fam0 is fam1)
                 try: a = x - y
-                except FixedPoint.FXexception: self.failIf(fam0 is fam1)
+                except FixedPoint.FXfamilyError: self.failIf(fam0 is fam1)
                 else: self.failUnless(fam0 is fam1)
                 try: a = x * y
-                except FixedPoint.FXexception: self.failIf(fam0 is fam1)
+                except FixedPoint.FXfamilyError: self.failIf(fam0 is fam1)
                 else: self.failUnless(fam0 is fam1)
                 try: a = x / y
-                except FixedPoint.FXexception: self.failIf(fam0 is fam1)
+                except FixedPoint.FXfamilyError: self.failIf(fam0 is fam1)
                 else: self.failUnless(fam0 is fam1)
 
+
+    def testSqrt(self):
+        """sqrt method should find square-roots"""
+        fam62 = FixedPoint.FXfamily(62)
+        scale = 0.94
+        for i in range(-40, 40):
+            x = i * scale
+            fx = FixedPoint.FXnum(x, fam62)
+            try:
+                rt = fx.sqrt()
+            except FixedPoint.FXdomainError:
+                self.failIf(x >= 0)
+            else:
+                rt2 = float(rt * rt)
+                self.assertAlmostEqual(x, rt2)
+                if i == 0:
+                    self.assertEqual(FixedPoint.FXnum(0, fam62), rt)
+
+
     def testExp(self):
-        """exponent method agree with math.exp"""
+        """exponent method should agree with math.exp"""
         fam62 = FixedPoint.FXfamily(62)
         scale = 0.23
         for i in range(-32, 32):
@@ -299,6 +333,9 @@ class FixedPointTest(unittest.TestCase):
         """sin/cos methods agree with math.sin/cos"""
         fam62 = FixedPoint.FXfamily(62)
         scale = 0.342
+	fang = FixedPoint.FXnum(0, fam62)
+	self.assertEqual(fang, fang.sin())
+	self.assertEqual(FixedPoint.FXnum(1,fam62), fang.cos())
         for i in range(-32, 32):
             x = i * scale
             sin_true = math.sin(x)
@@ -320,6 +357,21 @@ class FixedPointTest(unittest.TestCase):
             ang_true = math.atan(tan)
             ang = FixedPoint.FXnum(tan, fam62).atan()
             self.assertAlmostEqual(ang_true, ang)
+
+
+    def testArcSinCos(self):
+        """asin/acos methods should be inverses of sin/cos"""
+        fam62 = FixedPoint.FXfamily(62)
+        steps = 20
+        for i in range(0, steps + 1):
+            for s in [-1.0, 1.0]:
+                trig = FixedPoint.FXnum((i * s) / steps, fam62)
+                isn = trig.asin()
+                self.failUnless(abs(isn) <= fam62.GetPi() / 2)
+                self.assertAlmostEqual(float(trig), float(isn.sin()))
+                ics = trig.acos()
+                self.failUnless(0 <= ics and ics <= fam62.GetPi())
+                self.assertAlmostEqual(float(trig), float(ics.cos()))
 
 
 

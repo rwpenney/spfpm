@@ -24,7 +24,7 @@ def plotDemo():
     # plot graph of approximations to Pi
     pi_true = FixedPoint.FXfamily(200).GetPi()
     datlist = []
-    for res in range(10,25):
+    for res in range(10,26):
         val = 4 * FixedPoint.FXnum(1, FixedPoint.FXfamily(res)).atan()
         datlist.append([res, val])
     trulist = [[10, pi_true], [25, pi_true]]
