@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # installation/setup script for Simple Python Fixed-Point Module
-# $Revision:$, $Date$
+# $Revision$, $Date$
 # RW Penney, January 2007
 
 from distutils.core import setup
@@ -24,5 +24,5 @@ setup(
 	'of mathematical functions including sqrt, exp, sin, cos, atan etc.',
     name = 'spfpm',
     url = 'http://www.sourceforge.net/projects/pyfixedpoint',
-    version = '0.4',
+    version = '0.5',
     py_modules = [ 'FixedPoint' ])

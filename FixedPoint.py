@@ -460,14 +460,21 @@ class FXnum(object):
 
     def asin(self):
         """Compute inverse sine of given number"""
-        if self == 1:
-            return self.family.GetPi() / 2
-        elif self == -1:
-            return -self.family.GetPi() / 2
+        arg = self
+        reflect = False
+        if self < 0:
+            arg *= -1
+            reflect = True
+        if arg <= 0.5:
+            cs2 = 1 - arg * arg
+            asn = (arg / cs2.sqrt()).atan()
         else:
-            cs2 = 1 - self * self
-            if cs2 < 0: raise FXdomainError
-            return (self / cs2.sqrt()).atan()
+            # apply 1-cos2t transformation:
+            tn2 = (1 - arg) / (1 + arg)
+            if tn2 < 0: raise FXdomainError
+            asn = self.family.GetPi() / 2 - 2 * (tn2.sqrt()).atan()
+        if reflect: asn *= -1
+        return asn
 
     def cos(self):
         """Compute cosine of given number (as angle in radians)"""
@@ -487,18 +494,16 @@ class FXnum(object):
         if self < 0:
             arg *= -1
             reflect = True
-        if arg == 1:
-            cs = FXnum(0, self.family)
-        elif arg == 0:
-            cs = self.family.GetPi() / 2
-        else:
+        if arg <= 0.5:
             sn2 = 1 - arg * arg
-            if sn2 < 0: raise FXdomainError
-            cs = (sn2.sqrt() / arg).atan()
-        if reflect:
-            return self.family.GetPi() - cs
+            acs = self.family.GetPi() / 2 - (arg / sn2.sqrt()).atan()
         else:
-            return cs
+            # apply 1-cos2t transformation:
+            tn2 = (1 - arg) / (1 + arg)
+            if tn2 < 0: raise FXdomainError
+            acs = 2 * (tn2.sqrt()).atan()
+        if reflect: acs = self.family.GetPi() - acs
+        return acs
 
     def sincos(self):
         """Compute sine & cosine of given number (as angle in radians)"""
@@ -592,45 +597,6 @@ class FXnum(object):
             if delta.scaledval == 0: break
         return self * atn
 # ^^^ class FXnum ^^^
-
-
-class FPnum(FXnum):
-    """Backwards-compatibility class following name-change from FPnum to FXnum.
-    The name-change was prompted in anticipation of future support for
-    floating-point numbers within a similar framework, for which the
-    abbreviation 'FPnum' would have been ambiguous."""
-
-    count_init = 0
-    count_frac = 0
-    def __init__(self, val=0L, family=None):
-        if family is None: family = _defaultFamily
-        FXnum.__init__(self, val, family)
-        FPnum.count_init += 1
-        if FPnum.count_init == 1:
-            import sys
-            print >> sys.stderr, \
-                '/**** spfpm-0.4 (FixedPoint) **************************\\\n' \
-                '| PLEASE NOTE:                                         |\n' \
-                '| The classname "FPnum" is now deprecated.             |\n' \
-                '| Please use "FXnum" instead. Thanks.                  |\n' \
-                '| THIS COMPATIBILTY-LAYER WILL BE REMOVED in SPFPM-0.5 |\n' \
-                '\\******************************************************/'
-
-    def SetFraction(n_bits=32):
-        global _defaultFamily
-        _defaultFamily = FXfamily(n_bits)
-        FPnum.count_frac += 1
-        if FPnum.count_frac == 1:
-            import sys
-            print >> sys.stderr, \
-                '/**** spfpm-0.4 (FixedPoint) **************************\\\n' \
-                '| PLEASE NOTE:                                         |\n' \
-                '| The "FPnum.SetFraction()" method has been superseded |\n' \
-                '| by the FXfamily class, which allows                  |\n' \
-                '| multiple resolutions to coexist.                     |\n' \
-                '| Please use "FXfamily" instead. Thanks.               |\n' \
-                '\\******************************************************/'
-    SetFraction = staticmethod(SetFraction)
 
 
 if __name__ == "__main__":

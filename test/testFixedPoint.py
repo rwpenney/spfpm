@@ -333,9 +333,9 @@ class FixedPointTest(unittest.TestCase):
         """sin/cos methods agree with math.sin/cos"""
         fam62 = FixedPoint.FXfamily(62)
         scale = 0.342
-	fang = FixedPoint.FXnum(0, fam62)
-	self.assertEqual(fang, fang.sin())
-	self.assertEqual(FixedPoint.FXnum(1,fam62), fang.cos())
+        fang = FixedPoint.FXnum(0, fam62)
+        self.assertEqual(fang, fang.sin())
+        self.assertEqual(FixedPoint.FXnum(1,fam62), fang.cos())
         for i in range(-32, 32):
             x = i * scale
             sin_true = math.sin(x)
@@ -362,6 +362,9 @@ class FixedPointTest(unittest.TestCase):
     def testArcSinCos(self):
         """asin/acos methods should be inverses of sin/cos"""
         fam62 = FixedPoint.FXfamily(62)
+        trig = FixedPoint.FXnum(0, fam62)
+        self.assertEqual(trig, trig.asin())
+        self.assertEqual(trig, FixedPoint.FXnum(1,fam62).acos())
         steps = 20
         for i in range(0, steps + 1):
             for s in [-1.0, 1.0]:

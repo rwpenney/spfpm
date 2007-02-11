@@ -1,5 +1,9 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+11Feb07	- added improved asin()/acos() methods based on 1-cos2t transformations
+
+04Feb07	- removed (deprecated) FPnum wrappers
+
 03Feb07	- *** spfpm-0.4 released
 
 03Feb07	- patched rounding on cast to int/long to match behaviour of float-casts
