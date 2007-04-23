@@ -75,6 +75,21 @@ class FixedPointTest(unittest.TestCase):
             self.assertEqual(orig, x0)
             if x is x0: self.fail()
 
+    def testFamEquality(self):
+        """check tests on equivalence of FXfamilies"""
+        idxlist = [8, 16, 24, 33, 59]
+        for idx in idxlist:
+            fam0 = FixedPoint.FXfamily(idx)
+            for jdx in idxlist:
+                fam1 = FixedPoint.FXfamily(jdx)
+
+                if idx == jdx:
+                    self.failUnless(fam0 == fam1)
+                    self.failIf(fam0 != fam1)
+                else:
+                    self.failIf(fam0 == fam1)
+                    self.failUnless(fam0 != fam1)
+
 
     def testConversion(self):
         """check that conversion between families preserves values"""

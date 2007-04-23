@@ -18,6 +18,7 @@ setup(
 	'of essentially arbitrary precision. ' + \
 	'It aims to be more suitable for simulating binary ' + \
 	'fixed-point artihmetic within electronic hardware ' + \
+	'(e.g. for digital signal processing (DSP) applications) ' + \
 	'than the Decimal package, which is more concerned ' + \
 	'with fixed-point arithmetic in base-10. ' + \
 	'SPFPM supports basic arithmetic operations as well as a range ' + \

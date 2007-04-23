@@ -96,16 +96,18 @@ class FXfamily(object):
         return 'FXfamily(%d)' % (self.fraction_bits)
 
     def __eq__(self, other):
-        if isinstance(other, FXfamily):
+        try:
             return self.fraction_bits == other.fraction_bits
-        else:
-            return false
+        except AttributeError:
+            pass
+        return false
 
     def __ne__(self, other):
-        if isinstance(other, FXfamily):
+        try:
             return self.fraction_bits != other.fraction_bits
-        else:
-            return true
+        except AttributeError:
+            pass
+        return true
 
     def GetResolution(self):
         """Find the number of fractional binary digits"""
@@ -179,15 +181,18 @@ class FXbrokenError(FXexception):
 
 class FXnum(object):
     def __init__(self, val=0L, family=_defaultFamily):
-        assert isinstance(family, FXfamily)
+        converter = family.Convert
         self.family = family
-        if isinstance(val, FXnum):
-            self.scaledval = family.Convert(val.family, val.scaledval)
-        elif isinstance(val, list):
-            sval = val[0]
-            self.scaledval = sval
-        else:
-            self.scaledval = long(val * family.scale)
+        try:
+            # assume that val is similar to FXnum:
+            self.scaledval = converter(val.family, val.scaledval)
+        except AttributeError:
+            try:
+                # assume that val is subscriptable:
+                self.scaledval = val[0]
+            except TypeError:
+                # assume that val is ordinary numeric type:
+                self.scaledval = long(val * family.scale)
 
     def __hash__(self):
         return hash(self.scaledval) ^ hash(self.family)
@@ -216,11 +221,11 @@ class FXnum(object):
 
     def _CastOrFail_(self, other):
         """turn number into FXnum or check that it is in same family"""
-        if isinstance(other, FXnum):
+        try:
             # binary operations must involve members of same family
             if not self.family is other.family:
                 raise FXfamilyError, 1
-        else:
+        except AttributeError:
             # automatic casting from types other than FXnum is allowed:
             other = FXnum(other, self.family)
         return other
@@ -349,12 +354,12 @@ class FXnum(object):
         assert modulus is None
         if self == 0:
             return FXnum(1, self.family)
-        if isinstance(other, int) or isinstance(other, long):
-            ipwr = other
+        ipwr = long(other)
+        rmdr = (other -ipwr)
+        if rmdr == 0:
             frac = FXnum(1, self.family)
         else:
-            ipwr = long(other)
-            frac = ((other - ipwr) * self.log()).exp()
+            frac = (rmdr * self.log()).exp()
         return self.intpower(ipwr) * frac
 
     def __rpow__(self, other):
@@ -362,7 +367,7 @@ class FXnum(object):
 
     def intpower(self, pwr):
         """compute integer power by repeated squaring"""
-        assert isinstance(pwr, int) or isinstance(pwr, long)
+        assert isinstance(pwr, int) or isinstance(pwr, long)    # __index__ in python-2.5??
         invert = False
         if pwr < 0:
             pwr *= -1

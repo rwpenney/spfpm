@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+23Apr07	- removed use of 'isinstance' from FXfamily & (almost all of) FXnum
+
 11Feb07	- added improved asin()/acos() methods based on 1-cos2t transformations
 
 04Feb07	- removed (deprecated) FPnum wrappers
