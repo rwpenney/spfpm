@@ -1,5 +1,12 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+27May07	- *** spfpm-0.5 released
+
+26May07	- minor adjustments to ensure test-cases run under Python-2.2
+	added unit-test for repr()
+
+21May07	- neatened module importing in unit-test routines
+
 23Apr07	- removed use of 'isinstance' from FXfamily & (almost all of) FXnum
 
 11Feb07	- added improved asin()/acos() methods based on 1-cos2t transformations

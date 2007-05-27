@@ -198,7 +198,8 @@ class FXnum(object):
         return hash(self.scaledval) ^ hash(self.family)
 
     def __repr__(self):
-        return 'FXnum([%d], %s)' % (self.scaledval, self.family.__repr__())
+        """Create unambiguous string representation of self"""
+        return 'FXnum([%d], %r)' % (self.scaledval, self.family)
 
     # conversion operations:
     def __int__(self):
@@ -606,4 +607,7 @@ class FXnum(object):
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod()
+    try:
+        doctest.testmod()
+    except TypeError:
+        print "*** Problems running doctest module ***"
