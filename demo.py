@@ -4,7 +4,7 @@
 # Copyright 2006-2007, RW Penney
 
 
-import FixedPoint
+import FixedPoint, time
 
 def basicDemo():
     # basic demonstration of roots & exponents at various accuracies:
@@ -18,6 +18,23 @@ def basicDemo():
         print 'sqrt(' +str(val) + ')^2 ~ ' + str(rt * rt)
         print 'exp(1) = ', FixedPoint.FXnum(1, family).exp()
         print
+
+
+def speedDemo():
+    # calculate indicative speed of floating-point operations
+    res, count = 256, 10000
+    fam = FixedPoint.FXfamily(res)
+    x = FixedPoint.FXnum(0.5, fam)
+    lmb = FixedPoint.FXnum(3.6, fam)
+    one = FixedPoint.FXnum(1.0, fam)
+    t0 = time.clock()
+    for i in xrange(0, count):
+        # use logistic-map in chaotic region:
+        x = lmb * x * (one - x)
+    t1 = time.clock()
+    ops = count * 3
+    Dt = t1 - t0
+    print '%d %d-bit operations in %.2fs ~ %.2g FLOPS' % ( ops, res, Dt, (ops / Dt))
 
 
 def plotDemo():
@@ -49,7 +66,10 @@ def plotDemo():
 
 if __name__ == "__main__":
     basicDemo()
+    speedDemo()
     try:
         import Gnuplot, Numeric
         plotDemo()
     except ImportError: pass
+
+# vim: set ts=4 sw=4 et:

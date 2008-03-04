@@ -4,16 +4,22 @@
 # RW Penney, January 2007
 
 from FixedPoint import *
-import Gnuplot, Numeric
+import Gnuplot, Numeric, optparse
 
-def DoPlot(func, samples=range(10,26), label='function', postscript=False, filename='/tmp/graph.ps'):
-    fam = FXfamily(100 + samples[-1])
-    val_true = func(fam)
+def DoPlot(func, samples=range(10,26), label='function',
+            error=False, postscript=False, filename='/tmp/graph.ps'):
+    fam_acc = FXfamily(100 + samples[-1])
+    val_true = func(fam_acc)
     datlist = []
     for res in samples:
         fam = FXfamily(res)
         val = func(fam)
-        datlist.append([res, val])
+        if error:
+            eps = (FXnum(val, fam_acc) - val_true)
+            disc = (abs(eps)).log() / fam_acc.GetLog2() + res
+            datlist.append([res, disc])
+        else:
+            datlist.append([res, val])
     trulist = [[samples[0], val_true], [samples[-1], val_true]]
 
     fig = Gnuplot.Gnuplot()
@@ -23,8 +29,11 @@ def DoPlot(func, samples=range(10,26), label='function', postscript=False, filen
     fig('set autoscale y')
     fig('set data style linespoints')
     fig('set grid')
-    plitems = [Gnuplot.Data(Numeric.array(trulist, 'f')), \
-                Gnuplot.Data(Numeric.array(datlist, 'f'))]
+    if error:
+        plitems = [Gnuplot.Data(Numeric.array(datlist, 'f'))]
+    else:
+        plitems = [Gnuplot.Data(Numeric.array(trulist, 'f')), \
+                    Gnuplot.Data(Numeric.array(datlist, 'f'))]
     fig._add_to_queue(plitems)
     fig.refresh()
 
@@ -36,9 +45,23 @@ def DoPlot(func, samples=range(10,26), label='function', postscript=False, filen
 
 
 if __name__ == "__main__":
-    func = lambda fam: 4 * FXnum(1, fam).atan()
-    DoPlot(func, samples=range(10,26), label='4 tan^{-1}1')
+    parser = optparse.OptionParser()
+    parser.add_option('-e', '--errors', default=False, action='store_true')
+    parser.add_option('-p', '--postscript', default=False, action='store_true')
+    opts, args = parser.parse_args()
 
-    func = lambda fam: (0.5 * FXnum(2, fam).log()).exp()
-    DoPlot(func, samples=range(5,21), label='e^{(ln 2) / 2}')
+    gconfig = [
+        ( lambda fam: 4 * FXnum(1, fam). atan(),
+            xrange(10, 26), '4 tan^{-1}1', '/tmp/graph-pi.ps' ),
+        ( lambda fam: (0.5 * FXnum(2, fam).log()).exp(),
+            xrange(5, 21), 'e^{(ln 2) / 2}', '/tmp/graph-rt2.ps' )
+    ]
 
+    for cfg in gconfig:
+        ( func, rng, lbl, fnm) = cfg
+        if opts.errors:
+            rng = xrange(5, 500, 10)
+            lbl = 'lost-bits(' + lbl + ')'
+        DoPlot(func, samples=rng, label=lbl, error=opts.errors, postscript=opts.postscript, filename=fnm)
+
+# vim: set ts=4 sw=4 et:

@@ -330,6 +330,8 @@ class FXnum(object):
     # printing/converstion routines:
     def __str__(self):
         """Convert number (as decimal) into string"""
+        # despite rebinding costs, list+join idiom appears slower here
+        # than string concatenation building 'rep' from successive digits
         val = self.scaledval
         rep = ''
         if self.scaledval < 0:
@@ -611,3 +613,5 @@ if __name__ == "__main__":
         doctest.testmod()
     except TypeError:
         print "*** Problems running doctest module ***"
+
+# vim: set ts=4 sw=4 et:

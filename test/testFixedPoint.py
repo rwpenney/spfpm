@@ -413,3 +413,5 @@ except AttributeError:
 
 if __name__ == "__main__":
     unittest.main()
+
+# vim: set ts=4 sw=4 et:

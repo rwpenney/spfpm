@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+07Oct07	- added basic FLOPS calculator to demo.py
+
 27May07	- *** spfpm-0.5 released
 
 26May07	- minor adjustments to ensure test-cases run under Python-2.2
