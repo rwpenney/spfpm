@@ -81,10 +81,20 @@ class FXfamily(object):
     for example, sets of 12-bit, 32-bit & 200-bit quantities
     can be manipulated concurrently."""
 
-    def __init__(self, n_bits=64):
+    def __init__(self, n_bits=64, n_intbits=None):
         self.fraction_bits = n_bits         # bits to right of binary point
+        self.integer_bits = n_intbits       # bits to left of binary point
         self.scale = 1L << n_bits
         self.round = 1L << (n_bits - 1)
+
+        try:
+            thresh = 1L << (n_bits + n_intbits)
+            def validate(scaledval):
+                if scaledval >= thresh or scaledval < -thresh:
+                    raise FXoverflowError
+        except:
+            def validate(scaledval): return
+        self.validate = validate
         self.exp1 = None                    # cache of exp(1)
         self.log2 = None                    # cache of log(2)
         self.Pi = None                      # cache of 3.14159...
@@ -93,7 +103,7 @@ class FXfamily(object):
         return hash(self.fraction_bits)
 
     def __repr__(self):
-        return 'FXfamily(%d)' % (self.fraction_bits)
+        return 'FXfamily(n_bits=%d, n_intbits=%r)' % (self.fraction_bits, self.integer_bits)
 
     def __eq__(self, other):
         try:
@@ -170,6 +180,9 @@ class FXexception(ArithmeticError):
 
 class FXdomainError(FXexception):
     """Signal that input argument of mathematical function is unsuitable"""
+
+class FXoverflowError(FXexception):
+    """Signal that value has overflowed its most-significant bit"""
 
 class FXfamilyError(FXexception, TypeError):
     """Signal that family-types of FXnums in binary operation are mismatched"""
@@ -290,6 +303,7 @@ class FXnum(object):
         other = self._CastOrFail_(other)
         new = FXnum(family=self.family)
         new.scaledval = self.scaledval + other.scaledval
+        self.family.validate(new.scaledval)
         return new
 
     def __radd__(self, other):
@@ -300,6 +314,7 @@ class FXnum(object):
         other = self._CastOrFail_(other)
         new = FXnum(family=self.family)
         new.scaledval = self.scaledval - other.scaledval
+        self.family.validate(new.scaledval)
         return new
 
     def __rsub__(self, other):
@@ -310,6 +325,7 @@ class FXnum(object):
         other = self._CastOrFail_(other)
         new = FXnum(family=self.family)
         new.scaledval = (self.scaledval * other.scaledval + self.family.round) // self.family.scale
+        self.family.validate(new.scaledval)
         return new
 
     def __rmul__(self, other):
@@ -319,7 +335,9 @@ class FXnum(object):
         """Divide by another number (without truncation)"""
         other = self._CastOrFail_(other)
         new = FXnum(family=self.family)
-        new.scaledval = (self.scaledval * self.family.scale + self.family.round) // other.scaledval
+        new.scaledval = (self.scaledval * self.family.scale
+                            + self.family.round) // other.scaledval
+        self.family.validate(new.scaledval)
         return new
     __div__ = __truediv__
 

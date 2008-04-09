@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+09Apr08	- added validator in FXfamily to allow limited range of integer-part
+
 07Oct07	- added basic FLOPS calculator to demo.py
 
 27May07	- *** spfpm-0.5 released

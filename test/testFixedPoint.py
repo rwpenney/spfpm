@@ -6,7 +6,7 @@
 import math, sys, unittest
 sys.path.insert(0, '..')
 from FixedPoint import FXnum, FXfamily, \
-        FXdomainError, FXfamilyError
+        FXoverflowError, FXdomainError, FXfamilyError
 
 
 class FixedPointTest(unittest.TestCase):
@@ -283,6 +283,40 @@ class FixedPointTest(unittest.TestCase):
                 except FXfamilyError: self.failIf(fam0 is fam1)
                 else: self.failUnless(fam0 is fam1)
 
+    def testIntRange(self):
+        for top in [-4, -2, 0, 2, 4, 6]:
+            fam = FXfamily(16, top)
+            a = FXnum(1.0/16.01, fam)
+            zero = FXnum(0, fam)
+            limit = 1 << (top + 4)
+
+            cnt, x, y = 0, zero, zero
+            while cnt < (limit + 5):
+                cnt += 1
+
+                try: x += a
+                except FXoverflowError:
+                    if cnt <= limit: self.fail()
+                else:
+                    if cnt > limit: self.fail()
+
+                try: y -= a
+                except FXoverflowError:
+                    if cnt <= limit: self.fail()
+                else:
+                    if cnt > limit: self.fail()
+
+            try: x = zero + a * limit
+            except FXoverflowError: self.fail()
+            try: x = zero + a * (limit + 1)
+            except FXoverflowError: pass
+            else: self.fail()
+
+            try: x = zero - a * limit
+            except FXoverflowError: self.fail()
+            try: x = zero - a * (limit + 1)
+            except FXoverflowError: pass
+            else: self.fail()
 
     def testSqrt(self):
         """sqrt method should find square-roots"""
