@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # Simple Python Fixed-Point Module (SPFPM)
 # $Revision$, $Date$
-# Copyright 2006-2007, RW Penney
+# (C)Copyright 2006-2008, RW Penney
 
 
-# This file is Copyright 2006-2007, RW Penney
+# This file is (C)Copyright 2006-2008, RW Penney
 # and is released under the Python-2.4.2 license
 # (see http://www.python.org/psf/license),
 # it therefore comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
@@ -16,15 +16,16 @@
 The Simple Python Fixed-Point Module (SPFPM) provides objects of types
 FXnum and FXfamily which implement basic mathematical operations
 on fixed-point binary numbers (i.e. having a fixed number of
-fractional binary digits, with an arbitrary number of integer digits).
+fractional binary digits, with the number of integer digits being either
+arbitrary or subject to a user-defined limit).
 
-FXnum objects exist within a user-controllable collection of families managed
-by the FXfamily class, which sets the number of fractional digits for
-each family. This can be used, for example to ensure that a set of
-8-bit quantities can be manipulated consistently and kept separate from
-a set of 200-bit quantities in the same program. Conversion between
-FXnum objects in different families is supported, but solely through
-an explicit cast.
+FXnum objects exist within a user-controllable collection of families
+managed by the FXfamily class, which sets the number of fractional
+& integer digits for each family. This can be used, for example,
+to ensure that a set of 8-bit quantities can be manipulated consistently
+and kept separate from a set of 200-bit quantities in the same program.
+Conversion between FXnum objects in different families is supported,
+but solely through an explicit cast.
 
 >>> x = FXnum(2.1)                  # default FXfamily, with 64-bits
 >>> print x
@@ -57,6 +58,13 @@ an explicit cast.
 >>> # c = rx + ly                   # throws exception - different families
 >>> d = ly + y                      # ok - same families
 
+>>> a = FXnum(1.4, FXfamily(12, 4)) # limit magnitude to 2^(4-1)
+>>> print a
+1.3999
+>>> print a * 5, a * -5
+6.9995 -6.9995
+>>> #print a * 6, a * -6            # throws exception indicating overflow
+
 >>> fam = FXfamily(200)
 >>> print fam.GetPi()
 3.141592653589793238462643383279502884197169399375105820974944478108
@@ -88,7 +96,7 @@ class FXfamily(object):
         self.round = 1L << (n_bits - 1)
 
         try:
-            thresh = 1L << (n_bits + n_intbits)
+            thresh = 1L << (n_bits + n_intbits - 1)
             def validate(scaledval):
                 if scaledval >= thresh or scaledval < -thresh:
                     raise FXoverflowError

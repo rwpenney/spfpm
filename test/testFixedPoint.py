@@ -284,11 +284,11 @@ class FixedPointTest(unittest.TestCase):
                 else: self.failUnless(fam0 is fam1)
 
     def testIntRange(self):
-        for top in [-4, -2, 0, 2, 4, 6]:
+        for top in [-3, -2, 0, 2, 4, 6]:
             fam = FXfamily(16, top)
             a = FXnum(1.0/16.01, fam)
             zero = FXnum(0, fam)
-            limit = 1 << (top + 4)
+            limit = 1 << (top + 4 - 1)
 
             cnt, x, y = 0, zero, zero
             while cnt < (limit + 5):

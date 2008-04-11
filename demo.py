@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # demonstration of Simple Python Fixed-Point Module
 # $Revision$, $Date$
-# Copyright 2006-2007, RW Penney
+# (C)Copyright 2006-2008, RW Penney
 
 
 import FixedPoint, time
@@ -12,29 +12,46 @@ def basicDemo():
         family = FixedPoint.FXfamily(resolution)
         val = 2
 
-        print '=== ' + str(resolution) + 'bits ==='
+        print '=== %d bits ===' % ( resolution )
         rt = FixedPoint.FXnum(val, family).sqrt()
         print 'sqrt(' + str(val) + ')~ ' + str(rt)
         print 'sqrt(' +str(val) + ')^2 ~ ' + str(rt * rt)
         print 'exp(1) = ', FixedPoint.FXnum(1, family).exp()
         print
 
+def overflowDemo():
+    # illustrate how finite range limits calculation of exponents:
+    res = 20
+    print '=== %d-bit fractional part ===' % ( res )
+    for intsize in [4, 8, 16, 32, 64]:
+        family = FixedPoint.FXfamily(20, intsize)
+        x = FixedPoint.FXnum(0.0, family)
+        step = 0.1
+        while x < 100.0:
+            try:
+                ex = x.exp()
+            except FixedPoint.FXoverflowError:
+                print '%2d-bit integer part: exp(x) overflows at x=%.3g' % (intsize, float(x))
+                break
+            x += step
+    print
 
 def speedDemo():
     # calculate indicative speed of floating-point operations
-    res, count = 256, 10000
-    fam = FixedPoint.FXfamily(res)
-    x = FixedPoint.FXnum(0.5, fam)
-    lmb = FixedPoint.FXnum(3.6, fam)
-    one = FixedPoint.FXnum(1.0, fam)
-    t0 = time.clock()
-    for i in xrange(0, count):
-        # use logistic-map in chaotic region:
-        x = lmb * x * (one - x)
-    t1 = time.clock()
-    ops = count * 3
-    Dt = t1 - t0
-    print '%d %d-bit operations in %.2fs ~ %.2g FLOPS' % ( ops, res, Dt, (ops / Dt))
+    print '=== speed test ==='
+    for res, count in [ (16, 10000), (32, 10000), (64, 10000), (128, 10000), (256, 10000), (512, 10000) ]:
+        fam = FixedPoint.FXfamily(res)
+        x = FixedPoint.FXnum(0.5, fam)
+        lmb = FixedPoint.FXnum(3.6, fam)
+        one = FixedPoint.FXnum(1.0, fam)
+        t0 = time.clock()
+        for i in xrange(0, count):
+            # use logistic-map in chaotic region:
+            x = lmb * x * (one - x)
+        t1 = time.clock()
+        ops = count * 3
+        Dt = t1 - t0
+        print '%d %d-bit operations in %.2fs ~ %.2g FLOPS' % ( ops, res, Dt, (ops / Dt))
 
 
 def plotDemo():
@@ -66,6 +83,7 @@ def plotDemo():
 
 if __name__ == "__main__":
     basicDemo()
+    overflowDemo()
     speedDemo()
     try:
         import Gnuplot, Numeric
