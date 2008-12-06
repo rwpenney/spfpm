@@ -40,7 +40,7 @@ def DoPlot(func, samples=range(10,26), label='function',
     if postscript:
         fig.hardcopy(filename, terminal='postscript', eps=True, enhanced=True, color=True, solid=True, fontsize=20)
     else:
-        raw_input('hit return to continue...')
+        input('hit return to continue...')
 
 
 
@@ -52,15 +52,15 @@ if __name__ == "__main__":
 
     gconfig = [
         ( lambda fam: 4 * FXnum(1, fam). atan(),
-            xrange(10, 26), '4 tan^{-1}1', '/tmp/graph-pi.ps' ),
+            range(10, 26), '4 tan^{-1}1', '/tmp/graph-pi.ps' ),
         ( lambda fam: (0.5 * FXnum(2, fam).log()).exp(),
-            xrange(5, 21), 'e^{(ln 2) / 2}', '/tmp/graph-rt2.ps' )
+            range(5, 21), 'e^{(ln 2) / 2}', '/tmp/graph-rt2.ps' )
     ]
 
     for cfg in gconfig:
         ( func, rng, lbl, fnm) = cfg
         if opts.errors:
-            rng = xrange(5, 500, 10)
+            rng = range(5, 500, 10)
             lbl = 'lost-bits(' + lbl + ')'
         DoPlot(func, samples=rng, label=lbl, error=opts.errors, postscript=opts.postscript, filename=fnm)
 

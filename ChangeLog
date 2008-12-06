@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+06Dec08	- ported to Python-3.0
+
 11Apr08	- *** spfpm-0.6 released
 
 09Apr08	- added validator in FXfamily to allow limited range of integer-part

@@ -2,7 +2,7 @@
 # $Revision$, $Date$
 # RW Penney, January 2007
 
-PYTHON=		python
+PYTHON=		python3.0
 TEMPDIRS=	build dist
 TEMPFILES=	MANIFEST
 
@@ -12,8 +12,8 @@ demo:
 
 .PHONY:	test
 test:
-	${PYTHON} FixedPoint.py
-	(cd test; ${PYTHON} testFixedPoint.py)
+	${PYTHON} -t FixedPoint.py
+	(cd test; ${PYTHON} -t testFixedPoint.py)
 
 .PHONY:	install
 install:

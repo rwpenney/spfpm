@@ -17,7 +17,7 @@ def six():
         sum -= fac * (2 * idx + 1.0) / (16 * idx * idx - 1.0)
         fac /= 9.0
         idx += 1
-        print sum * scl, '   ', math.sin(sum * scl)
+        print(sum * scl, '   ', math.sin(sum * scl))
 
 def eight():
     rt2 = math.sqrt(2)
@@ -30,11 +30,11 @@ def eight():
         sum -= fac * (8 * idx + 2 * rt2) /   \
                 ((rt2 - 1.0) * (16 * idx * idx - 1.0))
         idx += 1
-        print sum * scl, '   ', math.sin(sum * scl)
+        print(sum * scl, '   ', math.sin(sum * scl))
 
 def main():
     six()
-    print
+    print()
     eight()
 
 if __name__ == "__main__":

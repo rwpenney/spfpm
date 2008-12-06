@@ -12,25 +12,27 @@ from FixedPoint import FXnum, FXfamily, \
 class FixedPointTest(unittest.TestCase):
     def setUp(self):
         pass
-        #print "setting up"
 
     def tearDown(self):
         pass
-        #print "tearing down"
+
+    def assertAlmostEqual(self, first, second, places=7):
+        """Overload TestCase.assertAlmostEqual() to avoid use of round()"""
+        self.failUnless(abs(first-second) < (10.0 ** -places))
 
     def testLongRounding(self):
-        """long-integers should round towards minus infinity"""
+        """Integers should round towards minus infinity"""
         for base in range(2, 8):
             for step in range(1, 5):
                 for inc in range(1, base):
-                    pos = long((base * step) + inc)
-                    self.assertEqual(long(step), (pos // base))
-                    neg = long((base * -step) - inc)
-                    self.assertEqual(long(-step - 1), (neg // base))
+                    pos = int((base * step) + inc)
+                    self.assertEqual(int(step), (pos // base))
+                    neg = int((base * -step) - inc)
+                    self.assertEqual(int(-step - 1), (neg // base))
 
 
     def testBoolConditions(self):
-        """values used in boolean expressions should behave as true/false"""
+        """Values used in boolean expressions should behave as true/false"""
         if FXnum(0):
             self.fail()
         if FXnum(1):
@@ -40,7 +42,7 @@ class FixedPointTest(unittest.TestCase):
 
 
     def testImmutable(self):
-        """arithmetic operations on object should not alter orignal value"""
+        """Arithmetic operations on object should not alter orignal value"""
         scale = 0.297
         for i in range(-8, 8):
             orig = FXnum(i * scale)
@@ -77,7 +79,7 @@ class FixedPointTest(unittest.TestCase):
             if x is x0: self.fail()
 
     def testFamEquality(self):
-        """check tests on equivalence of FXfamilies"""
+        """Check tests on equivalence of FXfamilies"""
         idxlist = [8, 16, 24, 33, 59]
         for idx in idxlist:
             fam0 = FXfamily(idx)
@@ -93,7 +95,7 @@ class FixedPointTest(unittest.TestCase):
 
 
     def testConversion(self):
-        """check that conversion between families preserves values"""
+        """Check that conversion between families preserves values"""
         famlist = [FXfamily(b) for b in [32, 40, 48, 80, 120]]
         for i in range(1,10):
             xpos = (float)(1 << (2 * i)) + 1.0 / (1 << i);
@@ -112,7 +114,7 @@ class FixedPointTest(unittest.TestCase):
 
 
     def testPrinting(self):
-        """check conversion to string"""
+        """Check conversion to string"""
         for i in range(1, 10):
             v = 2 ** i
             for x in [v, -v, 1.0/v, -1.0/v]:
@@ -121,7 +123,7 @@ class FixedPointTest(unittest.TestCase):
                 self.assertEqual(fpa, fpx)
 
     def testRepresentation(self):
-        """check repr() functionality"""
+        """Check repr() functionality"""
         for i in range(1, 30):
             v = 1.7 ** i
             for x in [v, -v, 1.0/v, -1.0/v]:
@@ -131,15 +133,14 @@ class FixedPointTest(unittest.TestCase):
                 self.assertEqual(fp0, fpb)
 
     def testIntCasts(self):
-        """rounding on casting to int/long should match float-conversions"""
+        """Rounding on casting to int should match float-conversions"""
         for i in range(-40,40):
             x = i / 8.0
             self.assertEqual(int(x), int(FXnum(x)))
-            self.assertEqual(long(x), long(FXnum(x)))
 
 
     def testNegating(self):
-        """check prefix operators"""
+        """Check prefix operators"""
         fam17 = FXfamily(17)
         for i in range(-32, 32):
             x = i * 0.819
@@ -155,7 +156,7 @@ class FixedPointTest(unittest.TestCase):
 
 
     def testAddition(self):
-        """addition operators should promote & commute"""
+        """Addition operators should promote & commute"""
         scale = 0.125
         for x in range(-16, 16):
             fpx = FXnum(x * scale)
@@ -181,7 +182,7 @@ class FixedPointTest(unittest.TestCase):
 
 
     def testSubtraction(self):
-        """subtraction operators should promote & anti-commute"""
+        """Subtraction operators should promote & anti-commute"""
         scale = 0.0625
         for x in range(-32, 16):
             fpx = FXnum(x * scale)
@@ -207,7 +208,7 @@ class FixedPointTest(unittest.TestCase):
 
 
     def testMultiplication(self):
-        """multiplication operators should promote & commute"""
+        """Multiplication operators should promote & commute"""
         scale = 0.25
         scale2 = scale * scale
         for x in range(-16, 32):
@@ -234,7 +235,7 @@ class FixedPointTest(unittest.TestCase):
 
 
     def testDivision(self):
-        """division operators should promote & inverse-commute"""
+        """Division operators should promote & inverse-commute"""
         fam62 = FXfamily(62)
         scale = 0.125
         scale2 = scale * scale
@@ -264,7 +265,7 @@ class FixedPointTest(unittest.TestCase):
 
 
     def testFamilyProtection(self):
-        """check that arithmetic operators do not transmute resolution families"""
+        """Check that arithmetic operators do not transmute resolution families"""
         famlist = [FXfamily(res) for res in [8, 16, 40, 90]]
         for fam0 in famlist:
             for fam1 in famlist:
@@ -337,7 +338,7 @@ class FixedPointTest(unittest.TestCase):
 
 
     def testExp(self):
-        """exponent method should agree with math.exp"""
+        """Exponent method should agree with math.exp"""
         fam62 = FXfamily(62)
         scale = 0.23
         for i in range(-32, 32):
@@ -348,7 +349,7 @@ class FixedPointTest(unittest.TestCase):
 
 
     def testLog(self):
-        """logarithm method agree with math.log"""
+        """Logarithm method agree with math.log"""
         fam62 = FXfamily(62)
         base = 1.5
         for i in range(1, 32):
@@ -434,15 +435,6 @@ class FixedPointTest(unittest.TestCase):
                 ics = trig.acos()
                 self.failUnless(0 <= ics and ics <= fam62.GetPi())
                 self.assertAlmostEqual(float(trig), float(ics.cos()))
-
-
-# ensure support for older unittest module (e.g. Python-2.2)
-try:
-    fn = FixedPointTest.assertAlmostEqual
-except AttributeError:
-    def almostequal(obj, first, second, places=7):
-        obj.failUnless(abs(first-second) < (10.0 ** -places))
-    FixedPointTest.assertAlmostEqual = almostequal
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# demonstration of Simple Python Fixed-Point Module
+# Demonstration of Simple Python Fixed-Point Module
 # $Revision$, $Date$
 # (C)Copyright 2006-2008, RW Penney
 
@@ -12,17 +12,17 @@ def basicDemo():
         family = FixedPoint.FXfamily(resolution)
         val = 2
 
-        print '=== %d bits ===' % ( resolution )
+        print('=== {0} bits ==='.format(resolution))
         rt = FixedPoint.FXnum(val, family).sqrt()
-        print 'sqrt(' + str(val) + ')~ ' + str(rt)
-        print 'sqrt(' +str(val) + ')^2 ~ ' + str(rt * rt)
-        print 'exp(1) = ', FixedPoint.FXnum(1, family).exp()
-        print
+        print('sqrt(' + str(val) + ')~ ' + str(rt))
+        print('sqrt(' +str(val) + ')^2 ~ ' + str(rt * rt))
+        print('exp(1) = ', FixedPoint.FXnum(1, family).exp())
+        print()
 
 def overflowDemo():
     # illustrate how finite range limits calculation of exponents:
     res = 20
-    print '=== %d-bit fractional part ===' % ( res )
+    print('=== {0}-bit fractional part ==='.format(res))
     for intsize in [4, 8, 16, 32, 64]:
         family = FixedPoint.FXfamily(20, intsize)
         x = FixedPoint.FXnum(0.0, family)
@@ -31,27 +31,27 @@ def overflowDemo():
             try:
                 ex = x.exp()
             except FixedPoint.FXoverflowError:
-                print '%2d-bit integer part: exp(x) overflows at x=%.3g' % (intsize, float(x))
+                print('{0:2d}-bit integer part: exp(x) overflows at x={1:.3g}'.format(intsize, float(x)))
                 break
             x += step
-    print
+    print()
 
 def speedDemo():
     # calculate indicative speed of floating-point operations
-    print '=== speed test ==='
+    print('=== speed test ===')
     for res, count in [ (16, 10000), (32, 10000), (64, 10000), (128, 10000), (256, 10000), (512, 10000) ]:
         fam = FixedPoint.FXfamily(res)
         x = FixedPoint.FXnum(0.5, fam)
         lmb = FixedPoint.FXnum(3.6, fam)
         one = FixedPoint.FXnum(1.0, fam)
         t0 = time.clock()
-        for i in xrange(0, count):
+        for i in range(0, count):
             # use logistic-map in chaotic region:
             x = lmb * x * (one - x)
         t1 = time.clock()
         ops = count * 3
         Dt = t1 - t0
-        print '%d %d-bit operations in %.2fs ~ %.2g FLOPS' % ( ops, res, Dt, (ops / Dt))
+        print('{0} {1}-bit operations in {2:.2f}s ~ {3:.2g} FLOPS'.format(ops, res, Dt, (ops / Dt)))
 
 
 def plotDemo():
@@ -78,7 +78,7 @@ def plotDemo():
     fig.refresh()
     if PostScript:
         fig.hardcopy('/tmp/graph.ps', terminal='postscript', eps=True, enhanced=True, color=True, solid=True, fontsize=20)
-    raw_input('hit return to continue...')
+    input('hit return to continue...')
 
 
 if __name__ == "__main__":

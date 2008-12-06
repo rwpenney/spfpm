@@ -28,45 +28,45 @@ Conversion between FXnum objects in different families is supported,
 but solely through an explicit cast.
 
 >>> x = FXnum(2.1)                  # default FXfamily, with 64-bits
->>> print x
+>>> print(x)
 2.100000000000000088817
 >>> x = FXnum(21) / 10              # fractional error ~1/2^64 or ~5e-20
->>> print x
+>>> print(x)
 2.099999999999999999967
 >>> rx = x.sqrt()                   # rx created in same family as x
->>> print rx
+>>> print(rx)
 1.449137674618943857354
 >>> v = x + 2 * rx
->>> print v
+>>> print(v)
 4.998275349237887714675
 
 >>> y = FXnum(3.2, FXfamily(12))    # lower-precision 12-bit number
 >>> ly = y.log()                    # ly created in same family as y
->>> print ly                        # fractional error ~1/2^12 or ~2e-4
+>>> print(ly)                       # fractional error ~1/2^12 or ~2e-4
 1.1628
->>> print ly.exp()
+>>> print(ly.exp())
 3.1987
 >>> fy = float(y)
->>> print fy
+>>> print(fy)
 3.19995117188
 
 >>> # a = x + y                     # throws exception - different families
 >>> a = x + FXnum(y, _defaultFamily)
->>> print a
+>>> print(a)
 5.300073242187499999967
 >>> b = rx + x                      # ok - same families
 >>> # c = rx + ly                   # throws exception - different families
 >>> d = ly + y                      # ok - same families
 
 >>> a = FXnum(1.4, FXfamily(12, 4)) # limit magnitude to 2^(4-1)
->>> print a
+>>> print(a)
 1.3999
->>> print a * 5, a * -5
+>>> print(a * 5, a * -5)
 6.9995 -6.9995
->>> #print a * 6, a * -6            # throws exception indicating overflow
+>>> #print(a * 6, a * -6)           # throws exception indicating overflow
 
 >>> fam = FXfamily(200)
->>> print fam.GetPi()
+>>> print(fam.GetPi())
 3.141592653589793238462643383279502884197169399375105820974944478108
 
 Note:
@@ -92,11 +92,11 @@ class FXfamily(object):
     def __init__(self, n_bits=64, n_intbits=None):
         self.fraction_bits = n_bits         # bits to right of binary point
         self.integer_bits = n_intbits       # bits to left of binary point
-        self.scale = 1L << n_bits
-        self.round = 1L << (n_bits - 1)
+        self.scale = 1 << n_bits
+        self.round = 1 << (n_bits - 1)
 
         try:
-            thresh = 1L << (n_bits + n_intbits - 1)
+            thresh = 1 << (n_bits + n_intbits - 1)
             def validate(scaledval):
                 if scaledval >= thresh or scaledval < -thresh:
                     raise FXoverflowError
@@ -168,9 +168,9 @@ class FXfamily(object):
         elif bit_inc > 0:
             new_val = other_val << bit_inc
             if other_val > 0:
-                new_val |= 1L << (bit_inc - 1)
+                new_val |= 1 << (bit_inc - 1)
             else:
-                new_val |= ((1L << (bit_inc -1)) - 1)
+                new_val |= ((1 << (bit_inc -1)) - 1)
             return new_val
         else:
             return (other_val >> -bit_inc)
@@ -201,7 +201,7 @@ class FXbrokenError(FXexception):
 
 
 class FXnum(object):
-    def __init__(self, val=0L, family=_defaultFamily):
+    def __init__(self, val=0, family=_defaultFamily):
         converter = family.Convert
         self.family = family
         try:
@@ -213,7 +213,7 @@ class FXnum(object):
                 self.scaledval = val[0]
             except TypeError:
                 # assume that val is ordinary numeric type:
-                self.scaledval = long(val * family.scale)
+                self.scaledval = int(val * family.scale)
 
     def __hash__(self):
         return hash(self.scaledval) ^ hash(self.family)
@@ -224,18 +224,11 @@ class FXnum(object):
 
     # conversion operations:
     def __int__(self):
-        """Cast to (plain) integer"""
+        """Cast to integer"""
         if self.scaledval >= 0:
             return int(self.scaledval // self.family.scale)
         else:
             return int((self.scaledval + self.family.scale - 1) // self.family.scale)
-
-    def __long__(self):
-        """Cast to long integer"""
-        if self.scaledval >= 0:
-            return long(self.scaledval // self.family.scale)
-        else:
-            return long((self.scaledval + self.family.scale - 1) // self.family.scale)
 
     def __float__(self):
         """Cast to floating-point"""
@@ -246,7 +239,7 @@ class FXnum(object):
         try:
             # binary operations must involve members of same family
             if not self.family is other.family:
-                raise FXfamilyError, 1
+                raise FXfamilyError(1)
         except AttributeError:
             # automatic casting from types other than FXnum is allowed:
             other = FXnum(other, self.family)
@@ -301,7 +294,7 @@ class FXnum(object):
         other = self._CastOrFail_(other)
         return self.scaledval < other.scaledval
 
-    def __nonzero__(self):
+    def __bool__(self):
         """Test for non-zero"""
         return (self.scaledval != 0)
 
@@ -370,7 +363,7 @@ class FXnum(object):
             rep += '.'
             idx = 0
             while idx < (self.family.fraction_bits // 3) and frac != 0:
-                frac *= 10L
+                frac *= 10
                 q = frac // self.family.scale
                 rep += str(q)
                 frac -= q * self.family.scale
@@ -383,7 +376,7 @@ class FXnum(object):
         assert modulus is None
         if self == 0:
             return FXnum(1, self.family)
-        ipwr = long(other)
+        ipwr = int(other)
         rmdr = (other -ipwr)
         if rmdr == 0:
             frac = FXnum(1, self.family)
@@ -395,8 +388,8 @@ class FXnum(object):
         return FXnum(other, self.family) ** self
 
     def intpower(self, pwr):
-        """compute integer power by repeated squaring"""
-        assert isinstance(pwr, int) or isinstance(pwr, long)    # __index__ in python-2.5??
+        """Compute integer power by repeated squaring"""
+        assert isinstance(pwr, int)
         invert = False
         if pwr < 0:
             pwr *= -1
@@ -420,7 +413,7 @@ class FXnum(object):
             return self
         # calculate crude initial approximation:
         rt = FXnum(family=self.family)
-        rt.scaledval = 1L << (self.family.fraction_bits // 2)
+        rt.scaledval = 1 << (self.family.fraction_bits // 2)
         val = self.scaledval
         while val > 0:
             val >>= 2
@@ -434,7 +427,7 @@ class FXnum(object):
 
     def exp(self):
         """Compute exponential of given number"""
-        pwr = long(self)
+        pwr = int(self)
         return (self - pwr)._rawexp() * (self.family.GetExp1() ** pwr)
 
     def _rawexp(self):
@@ -563,7 +556,7 @@ class FXnum(object):
             reflect = True
         # find nearest multiple of pi/2:
         halfpi = self.family.GetPi() / 2
-        idx = long(ang / halfpi + 0.5)
+        idx = int(ang / halfpi + 0.5)
         ang -= idx * halfpi
         return (ang, idx, reflect)
 
@@ -638,6 +631,6 @@ if __name__ == "__main__":
     try:
         doctest.testmod()
     except TypeError:
-        print "*** Problems running doctest module ***"
+        print("*** Problems running doctest module ***")
 
 # vim: set ts=4 sw=4 et:
