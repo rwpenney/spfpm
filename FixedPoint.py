@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # Simple Python Fixed-Point Module (SPFPM)
 # $Revision$, $Date$
-# (C)Copyright 2006-2008, RW Penney
+# (C)Copyright 2006-2009, RW Penney
 
 
-# This file is (C)Copyright 2006-2008, RW Penney
+# This file is (C)Copyright 2006-2009, RW Penney
 # and is released under the Python-2.4.2 license
 # (see http://www.python.org/psf/license),
 # it therefore comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
@@ -93,7 +93,7 @@ class FXfamily(object):
         self.fraction_bits = n_bits         # bits to right of binary point
         self.integer_bits = n_intbits       # bits to left of binary point
         self.scale = 1 << n_bits
-        self.round = 1 << (n_bits - 1)
+        self._roundup = 1 << (n_bits - 1)
 
         try:
             thresh = 1 << (n_bits + n_intbits - 1)
@@ -106,6 +106,14 @@ class FXfamily(object):
         self.exp1 = None                    # cache of exp(1)
         self.log2 = None                    # cache of log(2)
         self.Pi = None                      # cache of 3.14159...
+
+        # Estimate number of extra bits required for accurate values of Pi etc,
+        # assuming worst-case of O(n_bits) operations, each with 1-LSB error:
+        self._augbits = 4
+        nb = n_bits
+        while nb > 0:
+            self._augbits += 1
+            nb >>= 1
 
     def __hash__(self):
         return hash(self.fraction_bits)
@@ -132,28 +140,28 @@ class FXfamily(object):
         return self.fraction_bits
 
     def GetExp1(self):
-        """return cached value of exp(1)"""
+        """Return cached value of exp(1)"""
         if self.exp1 is None:
-            # bute-force calculation of exp(1) using augmented accuracy:
-            augfamily = FXfamily(self.fraction_bits + 8)
+            # Bute-force calculation of exp(1) using augmented accuracy:
+            augfamily = FXfamily(self.fraction_bits + self._augbits)
             augexp = FXnum(1, augfamily)._rawexp()
             self.exp1 = FXnum(augexp, self)
         return self.exp1
 
     def GetLog2(self):
-        """return cached value of log(2)"""
+        """Return cached value of log(2)"""
         if self.log2 is None:
-            # bute-force calculation of log(2) using augmented accuracy:
-            augfamily = FXfamily(self.fraction_bits + 8)
+            # Bute-force calculation of log(2) using augmented accuracy:
+            augfamily = FXfamily(self.fraction_bits + self._augbits)
             auglog2 = FXnum(2, augfamily)._rawlog()
             self.log2 = FXnum(auglog2, self)
         return self.log2
 
     def GetPi(self):
-        """return cached value of pi"""
+        """Return cached value of pi"""
         if self.Pi is None:
-            # bute-force calculation of 8*atan(pi/8) using augmented accuracy:
-            augfamily = FXfamily(self.fraction_bits + 8)
+            # Bute-force calculation of 8*atan(pi/8) using augmented accuracy:
+            augfamily = FXfamily(self.fraction_bits + self._augbits)
             rt2 = FXnum(2, augfamily).sqrt()
             tan8 = (rt2 - 1)
             augpi = 8 * tan8._rawarctan()
@@ -161,7 +169,7 @@ class FXfamily(object):
         return self.Pi
 
     def Convert(self, other, other_val):
-        """convert number from different number of fraction-bits"""
+        """Convert number from different number of fraction-bits"""
         bit_inc = self.fraction_bits - other.fraction_bits
         if bit_inc == 0:
             return other_val
@@ -295,6 +303,10 @@ class FXnum(object):
         return self.scaledval < other.scaledval
 
     def __bool__(self):
+        """Test for truth/falsehood"""
+        return (self.scaledval != 0)
+
+    def __nonzero__(self):
         """Test for non-zero"""
         return (self.scaledval != 0)
 
@@ -325,7 +337,8 @@ class FXnum(object):
         """Multiply by another number"""
         other = self._CastOrFail_(other)
         new = FXnum(family=self.family)
-        new.scaledval = (self.scaledval * other.scaledval + self.family.round) // self.family.scale
+        new.scaledval = (self.scaledval * other.scaledval
+                            + self.family._roundup) // self.family.scale
         self.family.validate(new.scaledval)
         return new
 
@@ -337,7 +350,7 @@ class FXnum(object):
         other = self._CastOrFail_(other)
         new = FXnum(family=self.family)
         new.scaledval = (self.scaledval * self.family.scale
-                            + self.family.round) // other.scaledval
+                            + self.family._roundup) // other.scaledval
         self.family.validate(new.scaledval)
         return new
     __div__ = __truediv__

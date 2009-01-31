@@ -1,13 +1,14 @@
 #!/usr/bin/python
 # Demonstration of Simple Python Fixed-Point Module
 # $Revision$, $Date$
-# (C)Copyright 2006-2008, RW Penney
+# (C)Copyright 2006-2009, RW Penney
 
 
 import FixedPoint, time
 
 def basicDemo():
-    # basic demonstration of roots & exponents at various accuracies:
+    """Basic demonstration of roots & exponents at various accuracies"""
+
     for resolution in [8, 32, 80, 274]:
         family = FixedPoint.FXfamily(resolution)
         val = 2
@@ -15,12 +16,13 @@ def basicDemo():
         print('=== {0} bits ==='.format(resolution))
         rt = FixedPoint.FXnum(val, family).sqrt()
         print('sqrt(' + str(val) + ')~ ' + str(rt))
-        print('sqrt(' +str(val) + ')^2 ~ ' + str(rt * rt))
-        print('exp(1) = ', FixedPoint.FXnum(1, family).exp())
+        print('sqrt(' + str(val) + ')^2 ~ ' + str(rt * rt))
+        print('exp(1) ~ ' + str(FixedPoint.FXnum(1, family).exp()))
         print()
 
 def overflowDemo():
-    # illustrate how finite range limits calculation of exponents:
+    """Illustrate how finite range limits calculation of exponents"""
+
     res = 20
     print('=== {0}-bit fractional part ==='.format(res))
     for intsize in [4, 8, 16, 32, 64]:
@@ -37,7 +39,8 @@ def overflowDemo():
     print()
 
 def speedDemo():
-    # calculate indicative speed of floating-point operations
+    """calculate indicative speed of floating-point operations"""
+
     print('=== speed test ===')
     for res, count in [ (16, 10000), (32, 10000), (64, 10000), (128, 10000), (256, 10000), (512, 10000) ]:
         fam = FixedPoint.FXfamily(res)
@@ -55,7 +58,8 @@ def speedDemo():
 
 
 def plotDemo():
-    # plot graph of approximations to Pi
+    """Plot graph of approximations to Pi"""
+
     pi_true = FixedPoint.FXfamily(200).GetPi()
     datlist = []
     for res in range(10,26):

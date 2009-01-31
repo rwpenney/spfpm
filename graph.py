@@ -40,7 +40,7 @@ def DoPlot(func, samples=range(10,26), label='function',
     if postscript:
         fig.hardcopy(filename, terminal='postscript', eps=True, enhanced=True, color=True, solid=True, fontsize=20)
     else:
-        input('hit return to continue...')
+        input('Hit return to continue...')
 
 
 

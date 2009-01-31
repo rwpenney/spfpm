@@ -8,7 +8,7 @@ from distutils.core import setup
 setup(
     author = 'RW Penney',
     author_email = 'rwpenney@users.sourceforge.net',
-    description = 'tools for arithmetic on fixed-point (binary) numbers',
+    description = 'Tools for arithmetic on fixed-point (binary) numbers',
     fullname = 'Simple Python Fixed-Point Module',
     keywords = 'arithmetic, fixed-point, trigonometry, arbitrary precision',
     license = 'PSF Python License',
@@ -25,5 +25,5 @@ setup(
 	'of mathematical functions including sqrt, exp, sin, cos, atan etc.',
     name = 'spfpm',
     url = 'http://www.sourceforge.net/projects/pyfixedpoint',
-    version = '1.0-rc1',
+    version = '1.0',
     py_modules = [ 'FixedPoint' ])

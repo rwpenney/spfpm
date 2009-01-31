@@ -1,5 +1,9 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+31Jan08	- *** spfpm-1.0 released
+
+31Jan08	- improved accuracy of pi,log(2) etc used in trig,exp functions
+
 06Dec08	- ported to Python-3.0
 
 11Apr08	- *** spfpm-0.6 released
