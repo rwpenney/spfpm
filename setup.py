@@ -25,5 +25,5 @@ setup(
 	'of mathematical functions including sqrt, exp, sin, cos, atan etc.',
     name = 'spfpm',
     url = 'http://www.sourceforge.net/projects/pyfixedpoint',
-    version = '1.0',
+    version = '1.0.1',
     py_modules = [ 'FixedPoint' ])

@@ -244,17 +244,17 @@ class FXnum(object):
         return float(self.scaledval) / float(self.family.scale)
 
     def _CastOrFail_(self, other):
-        """turn number into FXnum or check that it is in same family"""
+        """Turn number into FXnum or check that it is in same family"""
         try:
-            # binary operations must involve members of same family
+            # Binary operations must involve members of same family
             if not self.family is other.family:
                 raise FXfamilyError(1)
         except AttributeError:
-            # automatic casting from types other than FXnum is allowed:
+            # Automatic casting from types other than FXnum is allowed:
             other = FXnum(other, self.family)
         return other
 
-    # unary arithmetic operations:
+    # Unary arithmetic operations:
     def __abs__(self):
         """Modulus"""
         if self.scaledval < 0:

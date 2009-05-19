@@ -29,7 +29,7 @@ def overflowDemo():
         family = FixedPoint.FXfamily(20, intsize)
         x = FixedPoint.FXnum(0.0, family)
         step = 0.1
-        while x < 100.0:
+        while True:
             try:
                 ex = x.exp()
             except FixedPoint.FXoverflowError:

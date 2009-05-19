@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+19May09	- *** spfpm-1.0.1 released
+
 20Feb09	- patched FXnum constructor to check for overflows
 
 31Jan08	- *** spfpm-1.0 released
