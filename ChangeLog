@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+20Feb09	- patched FXnum constructor to check for overflows
+
 31Jan08	- *** spfpm-1.0 released
 
 31Jan08	- improved accuracy of pi,log(2) etc used in trig,exp functions

@@ -90,8 +90,8 @@ class FXfamily(object):
     can be manipulated concurrently."""
 
     def __init__(self, n_bits=64, n_intbits=None):
-        self.fraction_bits = n_bits         # bits to right of binary point
-        self.integer_bits = n_intbits       # bits to left of binary point
+        self.fraction_bits = n_bits         # Bits to right of binary point
+        self.integer_bits = n_intbits       # Bits to left of binary point (including sign)
         self.scale = 1 << n_bits
         self._roundup = 1 << (n_bits - 1)
 
@@ -103,9 +103,9 @@ class FXfamily(object):
         except:
             def validate(scaledval): return
         self.validate = validate
-        self.exp1 = None                    # cache of exp(1)
-        self.log2 = None                    # cache of log(2)
-        self.Pi = None                      # cache of 3.14159...
+        self.exp1 = None                    # Cache of exp(1)
+        self.log2 = None                    # Cache of log(2)
+        self.Pi = None                      # Cache of 3.14159...
 
         # Estimate number of extra bits required for accurate values of Pi etc,
         # assuming worst-case of O(n_bits) operations, each with 1-LSB error:
@@ -222,6 +222,7 @@ class FXnum(object):
             except TypeError:
                 # assume that val is ordinary numeric type:
                 self.scaledval = int(val * family.scale)
+        self.family.validate(self.scaledval)
 
     def __hash__(self):
         return hash(self.scaledval) ^ hash(self.family)

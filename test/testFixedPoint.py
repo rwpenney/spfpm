@@ -289,7 +289,7 @@ class FixedPointTest(unittest.TestCase):
             fam = FXfamily(16, top)
             a = FXnum(1.0/16.01, fam)
             zero = FXnum(0, fam)
-            limit = 1 << (top + 4 - 1)
+            limit = 1 << (top + 4 - 1)  # Unlikely to be valid FXnum(,fam)
 
             cnt, x, y = 0, zero, zero
             while cnt < (limit + 5):
@@ -307,17 +307,6 @@ class FixedPointTest(unittest.TestCase):
                 else:
                     if cnt > limit: self.fail()
 
-            try: x = zero + a * limit
-            except FXoverflowError: self.fail()
-            try: x = zero + a * (limit + 1)
-            except FXoverflowError: pass
-            else: self.fail()
-
-            try: x = zero - a * limit
-            except FXoverflowError: self.fail()
-            try: x = zero - a * (limit + 1)
-            except FXoverflowError: pass
-            else: self.fail()
 
     def testSqrt(self):
         """sqrt method should find square-roots"""
