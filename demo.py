@@ -1,7 +1,7 @@
 #!/usr/bin/python
-# demonstration of Simple Python Fixed-Point Module
+# Demonstration of Simple Python Fixed-Point Module
 # $Revision$, $Date$
-# (C)Copyright 2006-2008, RW Penney
+# (C)Copyright 2006-2009, RW Penney
 
 
 import FixedPoint, time
@@ -27,7 +27,7 @@ def overflowDemo():
         family = FixedPoint.FXfamily(20, intsize)
         x = FixedPoint.FXnum(0.0, family)
         step = 0.1
-        while x < 100.0:
+        while True:
             try:
                 ex = x.exp()
             except FixedPoint.FXoverflowError:

@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # Simple Python Fixed-Point Module (SPFPM)
 # $Revision$, $Date$
-# (C)Copyright 2006-2008, RW Penney
+# (C)Copyright 2006-2009, RW Penney
 
 
-# This file is (C)Copyright 2006-2008, RW Penney
+# This file is (C)Copyright 2006-2009, RW Penney
 # and is released under the Python-2.4.2 license
 # (see http://www.python.org/psf/license),
 # it therefore comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
@@ -214,6 +214,7 @@ class FXnum(object):
             except TypeError:
                 # assume that val is ordinary numeric type:
                 self.scaledval = long(val * family.scale)
+        self.family.validate(self.scaledval)
 
     def __hash__(self):
         return hash(self.scaledval) ^ hash(self.family)

@@ -1,5 +1,9 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+19May09	- *** spfpm-0.6.1 released
+
+19May09	- Back-ported overflow test in FXnum constructor from 1.0-branch
+
 11Apr08	- *** spfpm-0.6 released
 
 09Apr08	- added validator in FXfamily to allow limited range of integer-part
