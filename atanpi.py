@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # simple approximation to pi, based on atan(1/sqrt(3))
-# $Revision$, $Date$
 # RW Penney, December 2006
 
 import math

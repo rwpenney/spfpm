@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # Simple Python Fixed-Point Module (SPFPM)
-# $Revision$, $Date$
 # (C)Copyright 2006-2009, RW Penney
 
 

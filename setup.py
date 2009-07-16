@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # installation/setup script for Simple Python Fixed-Point Module
-# $Revision$, $Date$
 # RW Penney, January 2007
 
 from distutils.core import setup

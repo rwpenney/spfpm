@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # Estimate accuracy of Pi calculated with varying fixed-point resolutions
-# $Revision$, $Date$
 # RW Penney, January 2009
 
 import FixedPoint

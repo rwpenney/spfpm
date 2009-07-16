@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # Demonstration of Simple Python Fixed-Point Module
-# $Revision$, $Date$
 # (C)Copyright 2006-2009, RW Penney
 
 

@@ -1,8 +1,7 @@
 # Makefile for Simple Python Fixed-Point Module
-# $Revision$, $Date$
 # RW Penney, January 2007
 
-PYTHON=		python3.0
+PYTHON=		python3
 TEMPDIRS=	build dist
 TEMPFILES=	MANIFEST
 

@@ -1,6 +1,5 @@
 #!/usr/bin/python
-# graphical demo of Simply Python Fixed-Point Module
-# $Revision$, $Date$
+# Graphical demo of Simply Python Fixed-Point Module
 # RW Penney, January 2007
 
 from FixedPoint import *

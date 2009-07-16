@@ -11,5 +11,3 @@ The package comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
 However, the author welcomes *constructive* feedback
 and bug-fixes via: rwpenney 'AT' users 'DOT' sourceforge 'DOT' net
 
-
-## $Revision$, $Date$
