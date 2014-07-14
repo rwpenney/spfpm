@@ -65,7 +65,7 @@ but solely through an explicit cast.
 >>> #print(a * 6, a * -6)           # throws exception indicating overflow
 
 >>> fam = FXfamily(200)
->>> print(fam.GetPi())
+>>> print(fam.pi)
 3.141592653589793238462643383279502884197169399375105820974944478108
 
 Note:
@@ -79,14 +79,18 @@ Note:
 SPFPM is provided as-is, with no warranty of any form.
 """
 
+
 class FXfamily(object):
-    """This class defines the fixed-point resolution of a set of FXnum objects.
+    """Descriptor of the accuracy of a set of fixed-point numbers.
+
+    This class defines the fixed-point resolution of a set of FXnum objects.
     All arithmetic operations between FXnum objects that are
     not explicitly cast into a different FXfamily
     must share the same FXfamily.
     Multiple FXfamily objects can exist within the same application so that,
     for example, sets of 12-bit, 32-bit & 200-bit quantities
-    can be manipulated concurrently."""
+    can be manipulated concurrently.
+    """
 
     def __init__(self, n_bits=64, n_intbits=None):
         self.fraction_bits = n_bits         # Bits to right of binary point
@@ -102,9 +106,9 @@ class FXfamily(object):
         except:
             def validate(scaledval): return
         self.validate = validate
-        self.exp1 = None                    # Cache of exp(1)
-        self.log2 = None                    # Cache of log(2)
-        self.Pi = None                      # Cache of 3.14159...
+
+        # Cached values of various mathematical constants:
+        self._exp1, self._log2, self._pi, self._sqrt2 = (None,) * 4
 
         # Estimate number of extra bits required for accurate values of Pi etc,
         # assuming worst-case of O(n_bits) operations, each with 1-LSB error:
@@ -113,6 +117,71 @@ class FXfamily(object):
         while nb > 0:
             self._augbits += 1
             nb >>= 1
+
+    @property
+    def resolution(self):
+        """The number of fractional binary digits"""
+        return self.fraction_bits
+
+    @property
+    def exp1(self):
+        """Inverse natural logarithm of unity."""
+        if self._exp1 is None:
+            # Brute-force calculation of exp(1) using augmented accuracy:
+            augfamily = FXfamily(self.fraction_bits + self._augbits)
+            augexp = FXnum(1, augfamily)._rawexp()
+            arg = 1 / FXnum(4, augfamily)
+            q0 = arg._rawexp()
+            q1 = q0 * q0
+            augexp = q1 * q1
+            self._exp1 = FXnum(augexp, self)
+        return self._exp1
+
+    @property
+    def log2(self):
+        """Natural logarithm of two."""
+        if self._log2 is None:
+            # Brute-force calculation of log(2) using augmented accuracy
+            #   via log(2) = log(2^19 / 3^12) + 6log(1 + 1/8):
+            augfamily = FXfamily(self.fraction_bits + self._augbits)
+            auglog2 = FXnum(2, augfamily)._rawlog()
+            three12 = (9 * 9 * 9) * (9 * 9 * 9)
+            two19 = 1 << 19
+            q0 = FXnum(two19 - three12, augfamily) / FXnum(three12, augfamily)
+            q1 = 1 / FXnum(8, augfamily)
+            auglog2 = q0._rawlog(isDelta=True) + 6 * q1._rawlog(isDelta=True)
+            self._log2 = FXnum(auglog2, self)
+        return self._log2
+
+    @property
+    def pi(self):
+        """Ratio of circle's perimeter to its diameter."""
+        if self._pi is None:
+            # Brute-force calculation of 8*atan(pi/8) using augmented accuracy:
+            augfamily = FXfamily(self.fraction_bits + self._augbits)
+            tan8 = (augfamily.sqrt2 - 1)
+            augpi = 8 * tan8._rawarctan()
+            self._pi = FXnum(augpi, self)
+        return self._pi
+
+    @property
+    def sqrt2(self):
+        """Square-root of two."""
+        if self._sqrt2 is None:
+            augfamily = FXfamily(self.fraction_bits + self._augbits)
+            x = FXnum(3, augfamily) / 2
+            while True:
+                delta = (1 / x - x / 2)
+                x += delta
+                if abs(delta.scaledval) <= 2:
+                    break
+            self._sqrt2 = FXnum(x, self)
+        return self._sqrt2
+
+    @property
+    def unity(self):
+        """The multiplicative identity."""
+        return FXnum(1, self)
 
     def __hash__(self):
         return hash(self.fraction_bits)
@@ -133,49 +202,6 @@ class FXfamily(object):
         except AttributeError:
             pass
         return true
-
-    def GetResolution(self):
-        """Find the number of fractional binary digits"""
-        return self.fraction_bits
-
-    def GetExp1(self):
-        """Return cached value of exp(1)"""
-        if self.exp1 is None:
-            # Brute-force calculation of exp(1) using augmented accuracy:
-            augfamily = FXfamily(self.fraction_bits + self._augbits)
-            augexp = FXnum(1, augfamily)._rawexp()
-            arg = 1 / FXnum(4, augfamily)
-            q0 = arg._rawexp()
-            q1 = q0 * q0
-            augexp = q1 * q1
-            self.exp1 = FXnum(augexp, self)
-        return self.exp1
-
-    def GetLog2(self):
-        """Return cached value of log(2)"""
-        if self.log2 is None:
-            # Brute-force calculation of log(2) using augmented accuracy
-            #   via log(2) = log(2^19 / 3^12) + 6log(1 + 1/8):
-            augfamily = FXfamily(self.fraction_bits + self._augbits)
-            auglog2 = FXnum(2, augfamily)._rawlog()
-            three12 = (9 * 9 * 9) * (9 * 9 * 9)
-            two19 = 1 << 19
-            q0 = FXnum(two19 - three12, augfamily) / FXnum(three12, augfamily)
-            q1 = 1 / FXnum(8, augfamily)
-            auglog2 = q0._rawlog(isDelta=True) + 6 * q1._rawlog(isDelta=True)
-            self.log2 = FXnum(auglog2, self)
-        return self.log2
-
-    def GetPi(self):
-        """Return cached value of pi"""
-        if self.Pi is None:
-            # Brute-force calculation of 8*atan(pi/8) using augmented accuracy:
-            augfamily = FXfamily(self.fraction_bits + self._augbits)
-            rt2 = FXnum(2, augfamily).sqrt()
-            tan8 = (rt2 - 1)
-            augpi = 8 * tan8._rawarctan()
-            self.Pi = FXnum(augpi, self)
-        return self.Pi
 
     def Convert(self, other, other_val):
         """Convert number from different number of fraction-bits"""
@@ -451,7 +477,7 @@ class FXnum(object):
     def exp(self):
         """Compute exponential of given number"""
         pwr = int(self)
-        return (self - pwr)._rawexp() * (self.family.GetExp1() ** pwr)
+        return (self - pwr)._rawexp() * (self.family.exp1 ** pwr)
 
     def _rawexp(self):
         """Brute-force exponential of given number (assumed smallish)"""
@@ -481,7 +507,7 @@ class FXnum(object):
         while val < lwrthresh:
             val *= 2
             count -= 1
-        return val._rawlog() + count * self.family.GetLog2()
+        return val._rawlog() + count * self.family.log2
 
     def _rawlog(self, isDelta=False):
         """Compute (natural) logarithm of given number (assumed close to 1)"""
@@ -526,7 +552,7 @@ class FXnum(object):
             # apply 1-cos2t transformation:
             tn2 = (1 - arg) / (1 + arg)
             if tn2 < 0: raise FXdomainError
-            asn = self.family.GetPi() / 2 - 2 * (tn2.sqrt()).atan()
+            asn = self.family.pi / 2 - 2 * (tn2.sqrt()).atan()
         if reflect: asn *= -1
         return asn
 
@@ -550,13 +576,13 @@ class FXnum(object):
             reflect = True
         if arg <= 0.5:
             sn2 = 1 - arg * arg
-            acs = self.family.GetPi() / 2 - (arg / sn2.sqrt()).atan()
+            acs = self.family.pi / 2 - (arg / sn2.sqrt()).atan()
         else:
             # apply 1-cos2t transformation:
             tn2 = (1 - arg) / (1 + arg)
             if tn2 < 0: raise FXdomainError
             acs = 2 * (tn2.sqrt()).atan()
-        if reflect: acs = self.family.GetPi() - acs
+        if reflect: acs = self.family.pi - acs
         return acs
 
     def sincos(self):
@@ -582,7 +608,7 @@ class FXnum(object):
             ang *= -1
             reflect = True
         # find nearest multiple of pi/2:
-        halfpi = self.family.GetPi() / 2
+        halfpi = self.family.pi / 2
         idx = int(ang / halfpi + 0.5)
         ang -= idx * halfpi
         return (ang, idx, reflect)
@@ -629,7 +655,7 @@ class FXnum(object):
         if double:
             ang *= 2
         if recip:
-            ang = self.family.GetPi() / 2 - ang
+            ang = self.family.pi / 2 - ang
         if reflect:
             ang *= -1
         return ang

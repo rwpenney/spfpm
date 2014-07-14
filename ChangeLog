@@ -1,6 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
-14Jul14	- added improved expressions for computing exp(1) and log(2)
+14Jul14	- replaced various getter methods in FXfamily with properties
+	added improved expressions for computing exp(1) and log(2)
 	updated graph-based demos to use Matplotlib in place of Gnuplot
 
 19May09	- *** spfpm-1.0.1 released

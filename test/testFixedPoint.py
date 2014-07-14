@@ -4,7 +4,7 @@
 
 import math, sys, unittest
 sys.path.insert(0, '..')
-from FixedPoint import FXnum, FXfamily, \
+from FixedPoint import FXfamily, FXnum, \
         FXoverflowError, FXdomainError, FXfamilyError
 
 
@@ -17,7 +17,10 @@ class FixedPointTest(unittest.TestCase):
 
     def assertAlmostEqual(self, first, second, places=7):
         """Overload TestCase.assertAlmostEqual() to avoid use of round()"""
-        self.assertTrue(abs(first-second) < (10.0 ** -places))
+        tol = 10.0 ** -places
+        self.assertTrue(abs(first-second) < tol,
+                        '{} and {} differ by more than {} ({})'.format(
+                            first, second, tol, (first - second)))
 
     def testLongRounding(self):
         """Integers should round towards minus infinity"""
@@ -418,11 +421,37 @@ class FixedPointTest(unittest.TestCase):
             for s in [-1.0, 1.0]:
                 trig = FXnum((i * s) / steps, fam62)
                 isn = trig.asin()
-                self.assertTrue(abs(isn) <= fam62.GetPi() / 2)
+                self.assertTrue(abs(isn) <= fam62.pi / 2)
                 self.assertAlmostEqual(float(trig), float(isn.sin()))
                 ics = trig.acos()
-                self.assertTrue(0 <= ics and ics <= fam62.GetPi())
+                self.assertTrue(0 <= ics and ics <= fam62.pi)
                 self.assertAlmostEqual(float(trig), float(ics.cos()))
+
+
+    def testMathConsts(self):
+        """Check various mathematical constants against math module."""
+        for ident, target in [('unity', 1.0),
+                              ('exp1',  math.e),
+                              ('log2',  math.log(2)),
+                              ('pi',    math.pi),
+                              ('sqrt2', math.sqrt(2))]:
+            self.assertAlmostEqual(getattr(FXfamily(64), ident),
+                                   target, places=15)
+
+    def testConstPrecision(self):
+        """Check claimed precision of constants such as pi, log2, etc."""
+
+        extra_bits = 64
+        for res in (8, 16, 32, 64, 256, 1024):
+            fam0 = FXfamily(res)
+            fam_extra = FXfamily(res + extra_bits)
+
+            for field in ('exp1', 'log2', 'pi', 'sqrt2'):
+                x0 = getattr(fam0, field).scaledval
+                x_extra = getattr(fam_extra, field).scaledval
+
+                self.assertEqual(x0, x_extra >> extra_bits)
+
 
 
 if __name__ == "__main__":

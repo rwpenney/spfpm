@@ -25,7 +25,7 @@ def basicDemo():
         rt = FixedPoint.FXnum(val, family).sqrt()
         print('sqrt(' + str(val) + ')~ ' + str(rt))
         print('sqrt(' + str(val) + ')^2 ~ ' + str(rt * rt))
-        print('exp(1) ~ ' + str(FixedPoint.FXnum(1, family).exp()))
+        print('exp(1) ~ ' + str(family.exp1))
         print()
 
 
@@ -35,7 +35,7 @@ def overflowDemo():
     res = 20
     print('=== {0}-bit fractional part ==='.format(res))
     for intsize in [4, 8, 16, 32, 64]:
-        family = FixedPoint.FXfamily(20, intsize)
+        family = FixedPoint.FXfamily(res, intsize)
         x = FixedPoint.FXnum(0.0, family)
         step = 0.1
         while True:
@@ -70,7 +70,7 @@ def speedDemo():
 def plotDemo():
     """Plot graph of approximations to Pi"""
 
-    pi_true = FixedPoint.FXfamily(200).GetPi()
+    pi_true = FixedPoint.FXfamily(200).pi
     b_min, b_max = 8, 25
     pipoints = []
     for res in range(b_min, b_max+1):

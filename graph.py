@@ -21,7 +21,7 @@ def DoPlot(func, samples=range(10,26), label='function', plot_diff=False):
 
         if plot_diff:
             eps = (FXnum(val, fam_acc) - val_true)
-            disc = (abs(eps)).log() / fam_acc.GetLog2() + res
+            disc = (abs(eps)).log() / fam_acc.log2 + res
             datlist.append([res, disc, val_true])
         else:
             datlist.append([res, val, val_true])
