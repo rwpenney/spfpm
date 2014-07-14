@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Unit-tests for simple fixed-point Python module
 # RW Penney, January 2006
 
@@ -17,7 +17,7 @@ class FixedPointTest(unittest.TestCase):
 
     def assertAlmostEqual(self, first, second, places=7):
         """Overload TestCase.assertAlmostEqual() to avoid use of round()"""
-        self.failUnless(abs(first-second) < (10.0 ** -places))
+        self.assertTrue(abs(first-second) < (10.0 ** -places))
 
     def testLongRounding(self):
         """Integers should round towards minus infinity"""
@@ -86,11 +86,11 @@ class FixedPointTest(unittest.TestCase):
                 fam1 = FXfamily(jdx)
 
                 if idx == jdx:
-                    self.failUnless(fam0 == fam1)
-                    self.failIf(fam0 != fam1)
+                    self.assertTrue(fam0 == fam1)
+                    self.assertFalse(fam0 != fam1)
                 else:
-                    self.failIf(fam0 == fam1)
-                    self.failUnless(fam0 != fam1)
+                    self.assertFalse(fam0 == fam1)
+                    self.assertTrue(fam0 != fam1)
 
 
     def testConversion(self):
@@ -105,9 +105,9 @@ class FixedPointTest(unittest.TestCase):
                         fp1 = FXnum(fp0, fam1)
                         try: f = (fp0 == fp1)
                         except FXfamilyError:
-                            self.failIf(fam0 is fam1)
+                            self.assertFalse(fam0 is fam1)
                         else:
-                            self.failUnless(fam0 is fam1)
+                            self.assertTrue(fam0 is fam1)
                         self.assertAlmostEqual(x, float(fp0))
                         self.assertAlmostEqual(x, float(fp1))
 
@@ -271,17 +271,17 @@ class FixedPointTest(unittest.TestCase):
                 x = FXnum(2, fam0)
                 y = FXnum(3, fam1)
                 try: a = x + y
-                except FXfamilyError: self.failIf(fam0 is fam1)
-                else: self.failUnless(fam0 is fam1)
+                except FXfamilyError: self.assertFalse(fam0 is fam1)
+                else: self.assertTrue(fam0 is fam1)
                 try: a = x - y
-                except FXfamilyError: self.failIf(fam0 is fam1)
-                else: self.failUnless(fam0 is fam1)
+                except FXfamilyError: self.assertFalse(fam0 is fam1)
+                else: self.assertTrue(fam0 is fam1)
                 try: a = x * y
-                except FXfamilyError: self.failIf(fam0 is fam1)
-                else: self.failUnless(fam0 is fam1)
+                except FXfamilyError: self.assertFalse(fam0 is fam1)
+                else: self.assertTrue(fam0 is fam1)
                 try: a = x / y
-                except FXfamilyError: self.failIf(fam0 is fam1)
-                else: self.failUnless(fam0 is fam1)
+                except FXfamilyError: self.assertFalse(fam0 is fam1)
+                else: self.assertTrue(fam0 is fam1)
 
     def testIntRange(self):
         for top in [-3, -2, 0, 2, 4, 6]:
@@ -317,7 +317,7 @@ class FixedPointTest(unittest.TestCase):
             try:
                 rt = fx.sqrt()
             except FXdomainError:
-                self.failIf(x >= 0)
+                self.assertFalse(x >= 0)
             else:
                 rt2 = float(rt * rt)
                 self.assertAlmostEqual(x, rt2)
@@ -418,10 +418,10 @@ class FixedPointTest(unittest.TestCase):
             for s in [-1.0, 1.0]:
                 trig = FXnum((i * s) / steps, fam62)
                 isn = trig.asin()
-                self.failUnless(abs(isn) <= fam62.GetPi() / 2)
+                self.assertTrue(abs(isn) <= fam62.GetPi() / 2)
                 self.assertAlmostEqual(float(trig), float(isn.sin()))
                 ics = trig.acos()
-                self.failUnless(0 <= ics and ics <= fam62.GetPi())
+                self.assertTrue(0 <= ics and ics <= fam62.GetPi())
                 self.assertAlmostEqual(float(trig), float(ics.cos()))
 
 

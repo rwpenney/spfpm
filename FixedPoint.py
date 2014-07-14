@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Simple Python Fixed-Point Module (SPFPM)
-# (C)Copyright 2006-2009, RW Penney
+# (C)Copyright 2006-2014, RW Penney
 
 
-# This file is (C)Copyright 2006-2009, RW Penney
+# This file is (C)Copyright 2006-2014, RW Penney
 # and is released under the Python-2.4.2 license
 # (see http://www.python.org/psf/license),
 # it therefore comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
@@ -47,7 +47,7 @@ but solely through an explicit cast.
 3.1987
 >>> fy = float(y)
 >>> print(fy)
-3.19995117188
+3.199951171875
 
 >>> # a = x + y                     # throws exception - different families
 >>> a = x + FXnum(y, _defaultFamily)
@@ -141,25 +141,35 @@ class FXfamily(object):
     def GetExp1(self):
         """Return cached value of exp(1)"""
         if self.exp1 is None:
-            # Bute-force calculation of exp(1) using augmented accuracy:
+            # Brute-force calculation of exp(1) using augmented accuracy:
             augfamily = FXfamily(self.fraction_bits + self._augbits)
             augexp = FXnum(1, augfamily)._rawexp()
+            arg = 1 / FXnum(4, augfamily)
+            q0 = arg._rawexp()
+            q1 = q0 * q0
+            augexp = q1 * q1
             self.exp1 = FXnum(augexp, self)
         return self.exp1
 
     def GetLog2(self):
         """Return cached value of log(2)"""
         if self.log2 is None:
-            # Bute-force calculation of log(2) using augmented accuracy:
+            # Brute-force calculation of log(2) using augmented accuracy
+            #   via log(2) = log(2^19 / 3^12) + 6log(1 + 1/8):
             augfamily = FXfamily(self.fraction_bits + self._augbits)
             auglog2 = FXnum(2, augfamily)._rawlog()
+            three12 = (9 * 9 * 9) * (9 * 9 * 9)
+            two19 = 1 << 19
+            q0 = FXnum(two19 - three12, augfamily) / FXnum(three12, augfamily)
+            q1 = 1 / FXnum(8, augfamily)
+            auglog2 = q0._rawlog(isDelta=True) + 6 * q1._rawlog(isDelta=True)
             self.log2 = FXnum(auglog2, self)
         return self.log2
 
     def GetPi(self):
         """Return cached value of pi"""
         if self.Pi is None:
-            # Bute-force calculation of 8*atan(pi/8) using augmented accuracy:
+            # Brute-force calculation of 8*atan(pi/8) using augmented accuracy:
             augfamily = FXfamily(self.fraction_bits + self._augbits)
             rt2 = FXnum(2, augfamily).sqrt()
             tan8 = (rt2 - 1)
@@ -461,21 +471,25 @@ class FXnum(object):
             raise FXdomainError
         elif self == 1:
             return FXnum(0, self.family)
-        thresh = FXnum(2, self.family)
+        uprthresh = FXnum(1.6, self.family)
+        lwrthresh = uprthresh / 2
         count = 0
         val = self
-        while val > thresh:
+        while val > uprthresh:
             val /= 2
             count += 1
-        while val < 1 / thresh:
+        while val < lwrthresh:
             val *= 2
             count -= 1
         return val._rawlog() + count * self.family.GetLog2()
 
-    def _rawlog(self):
+    def _rawlog(self, isDelta=False):
         """Compute (natural) logarithm of given number (assumed close to 1)"""
         lg = FXnum(0, self.family)
-        z = (self - 1) / (self + 1)
+        if isDelta:
+            z = self / (self + 2)
+        else:
+            z = (self - 1) / (self + 1)
         z2 = z * z
         term = 2 * z
         idx = 1

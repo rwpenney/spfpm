@@ -1,9 +1,18 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Demonstration of Simple Python Fixed-Point Module
-# (C)Copyright 2006-2009, RW Penney
+# (C)Copyright 2006-2014, RW Penney
 
+import time
+try:
+    import matplotlib, numpy
+    matplotlib.use('qt4agg')
+    import matplotlib.pyplot as plt
+    HAVE_MATPLOTLIB = True
+except ImportError:
+    HAVE_MATPLOTLIB = False
 
-import FixedPoint, time
+import FixedPoint
+
 
 def basicDemo():
     """Basic demonstration of roots & exponents at various accuracies"""
@@ -18,6 +27,7 @@ def basicDemo():
         print('sqrt(' + str(val) + ')^2 ~ ' + str(rt * rt))
         print('exp(1) ~ ' + str(FixedPoint.FXnum(1, family).exp()))
         print()
+
 
 def overflowDemo():
     """Illustrate how finite range limits calculation of exponents"""
@@ -36,6 +46,7 @@ def overflowDemo():
                 break
             x += step
     print()
+
 
 def speedDemo():
     """calculate indicative speed of floating-point operations"""
@@ -60,37 +71,29 @@ def plotDemo():
     """Plot graph of approximations to Pi"""
 
     pi_true = FixedPoint.FXfamily(200).GetPi()
-    datlist = []
-    for res in range(10,26):
+    b_min, b_max = 8, 25
+    pipoints = []
+    for res in range(b_min, b_max+1):
         val = 4 * FixedPoint.FXnum(1, FixedPoint.FXfamily(res)).atan()
-        datlist.append([res, val])
-    trulist = [[10, pi_true], [25, pi_true]]
+        pipoints.append([res, val])
+    pipoints = numpy.array(pipoints)
+    truepoints = numpy.array([[b_min, pi_true], [b_max, pi_true]])
 
-    PostScript = False
-    fig = Gnuplot.Gnuplot()
-    fig('set xlabel "bits"')
-    fig('set ylabel "4 tan^{-1}1"')
-    fig('set xrange [10:25]')
-    fig('set autoscale y')
-    fig('set data style linespoints')
-    fig('set grid')
-    plitems = []
-    plitems.append(Gnuplot.Data(Numeric.array(trulist, 'f')))
-    plitems.append(Gnuplot.Data(Numeric.array(datlist, 'f')))
-    fig._add_to_queue(plitems)
-    fig.refresh()
-    if PostScript:
-        fig.hardcopy('/tmp/graph.ps', terminal='postscript', eps=True, enhanced=True, color=True, solid=True, fontsize=20)
-    input('hit return to continue...')
+    plt.xlabel('bits')
+    plt.ylabel('$4 tan^{-1}1$')
+    plt.xlim([b_min, b_max])
+    plt.ylim([3.13, 3.16])
+    plt.grid(True)
+    for arr in (truepoints, pipoints):
+        plt.plot(arr[:,0], arr[:,1])
+    plt.show()
 
 
 if __name__ == "__main__":
     basicDemo()
     overflowDemo()
     speedDemo()
-    try:
-        import Gnuplot, Numeric
+    if HAVE_MATPLOTLIB:
         plotDemo()
-    except ImportError: pass
 
 # vim: set ts=4 sw=4 et:

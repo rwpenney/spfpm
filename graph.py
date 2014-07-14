@@ -1,59 +1,53 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Graphical demo of Simply Python Fixed-Point Module
 # RW Penney, January 2007
 
-from FixedPoint import *
-import Gnuplot, Numeric, optparse
+import matplotlib, numpy, optparse
 
-def DoPlot(func, samples=range(10,26), label='function',
-            error=False, postscript=False, filename='/tmp/graph.ps'):
-    fam_acc = FXfamily(100 + samples[-1])
+matplotlib.use('qt4agg')
+import matplotlib.pyplot as plt
+
+from FixedPoint import *
+
+
+def DoPlot(func, samples=range(10,26), label='function', plot_diff=False):
+    fam_acc = FXfamily(32 + samples[-1])
     val_true = func(fam_acc)
+
     datlist = []
     for res in samples:
         fam = FXfamily(res)
         val = func(fam)
-        if error:
+
+        if plot_diff:
             eps = (FXnum(val, fam_acc) - val_true)
             disc = (abs(eps)).log() / fam_acc.GetLog2() + res
-            datlist.append([res, disc])
+            datlist.append([res, disc, val_true])
         else:
-            datlist.append([res, val])
-    trulist = [[samples[0], val_true], [samples[-1], val_true]]
+            datlist.append([res, val, val_true])
 
-    fig = Gnuplot.Gnuplot()
-    fig('set xlabel "bits"')
-    fig('set ylabel "' + label + '"')
-    fig('set xrange [' + str(samples[0]) + ':' + str(samples[-1]) + ']')
-    fig('set autoscale y')
-    fig('set data style linespoints')
-    fig('set grid')
-    if error:
-        plitems = [Gnuplot.Data(Numeric.array(datlist, 'f'))]
-    else:
-        plitems = [Gnuplot.Data(Numeric.array(trulist, 'f')), \
-                    Gnuplot.Data(Numeric.array(datlist, 'f'))]
-    fig._add_to_queue(plitems)
-    fig.refresh()
+    acc = numpy.array(datlist)
 
-    if postscript:
-        fig.hardcopy(filename, terminal='postscript', eps=True, enhanced=True, color=True, solid=True, fontsize=20)
-    else:
-        input('Hit return to continue...')
+    plt.xlabel('bits')
+    plt.ylabel(label)
+    plt.grid(True)
 
+    if not plot_diff:
+        plt.plot(acc[:,0], acc[:,2])
+    plt.plot(acc[:,0], acc[:,1])
+    plt.show()
 
 
 if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('-e', '--errors', default=False, action='store_true')
-    parser.add_option('-p', '--postscript', default=False, action='store_true')
     opts, args = parser.parse_args()
 
     gconfig = [
         ( lambda fam: 4 * FXnum(1, fam). atan(),
-            range(10, 26), '4 tan^{-1}1', '/tmp/graph-pi.ps' ),
+            range(10, 26), '$4 \\tan^{-1}1$', '/tmp/graph-pi.ps' ),
         ( lambda fam: (0.5 * FXnum(2, fam).log()).exp(),
-            range(5, 21), 'e^{(ln 2) / 2}', '/tmp/graph-rt2.ps' )
+            range(5, 21), '$e^{(\\ln 2) / 2}$', '/tmp/graph-rt2.ps' )
     ]
 
     for cfg in gconfig:
@@ -61,6 +55,6 @@ if __name__ == "__main__":
         if opts.errors:
             rng = range(5, 500, 10)
             lbl = 'lost-bits(' + lbl + ')'
-        DoPlot(func, samples=rng, label=lbl, error=opts.errors, postscript=opts.postscript, filename=fnm)
+        DoPlot(func, samples=rng, label=lbl, plot_diff=opts.errors)
 
 # vim: set ts=4 sw=4 et:

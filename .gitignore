@@ -1,0 +1,6 @@
+# spfpm source artefacts to be ignored by Git
+
+.*.swp
+*.pyc
+
+MANIFEST
