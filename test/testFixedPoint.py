@@ -266,6 +266,19 @@ class FixedPointTest(unittest.TestCase):
                 self.assertAlmostEqual(fpa, tmp)
 
 
+    def testBitShifts(self):
+        """Check effects of left & right shift operators."""
+        fam = FXfamily(32)
+
+        self.assertEqual(FXnum(1, fam) << 2, 4)
+        self.assertEqual(FXnum(3, fam) << 4, 48)
+        self.assertEqual(FXnum(-7, fam) << 8, -7 * 256)
+
+        self.assertEqual(FXnum(1, fam) >> 1, 0.5)
+        self.assertEqual(FXnum(12, fam) >> 2, 3)
+        self.assertEqual(FXnum(-71 * 1024, fam) >> 12, -17.75)
+
+
     def testFamilyProtection(self):
         """Check that arithmetic operators do not transmute resolution families"""
         famlist = [FXfamily(res) for res in [8, 16, 40, 90]]
@@ -371,13 +384,13 @@ class FixedPointTest(unittest.TestCase):
         scale2 = 0.382
         for i in range(1, 32):
             x = i * scale
-            pow = FXnum(0, fam62) ** x
-            self.assertEqual(FXnum(1, fam62), pow)
+            pwr = FXnum(0, fam62) ** x
+            self.assertEqual(FXnum(1, fam62), pwr)
             for j in range(-16, 16):
                 y = j * scale2
-                pow_true = math.pow(x, y)
-                pow = FXnum(x, fam62) ** y
-                self.assertAlmostEqual(pow_true, pow)
+                pwr_true = math.pow(x, y)
+                pwr = FXnum(x, fam62) ** y
+                self.assertAlmostEqual(pwr_true, pwr)
 
 
     def testSinCos(self):

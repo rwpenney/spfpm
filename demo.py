@@ -34,7 +34,7 @@ def overflowDemo():
 
     res = 20
     print('=== {0}-bit fractional part ==='.format(res))
-    for intsize in [4, 8, 16, 32, 64]:
+    for intsize in [4, 8, 16, 32]:
         family = FixedPoint.FXfamily(res, intsize)
         x = FixedPoint.FXnum(0.0, family)
         step = 0.1
@@ -42,7 +42,7 @@ def overflowDemo():
             try:
                 ex = x.exp()
             except FixedPoint.FXoverflowError:
-                print('{0:2d}-bit integer part: exp(x) overflows at x={1:.3g}'.format(intsize, float(x)))
+                print('{0:2d}-bit integer part: exp(x) overflows near x={1:.3g}'.format(intsize, float(x)))
                 break
             x += step
     print()

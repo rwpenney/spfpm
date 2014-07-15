@@ -3,6 +3,7 @@
 # RW Penney, January 2007
 
 from distutils.core import setup
+from FixedPoint import SPFPM_VERSION
 
 setup(
     author = 'RW Penney',
@@ -24,5 +25,5 @@ setup(
         'of mathematical functions including sqrt, exp, sin, cos, atan etc.',
     name = 'spfpm',
     url = 'http://www.sourceforge.net/projects/pyfixedpoint',
-    version = '1.1',
+    version = SPFPM_VERSION,
     py_modules = [ 'FixedPoint' ])

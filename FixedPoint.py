@@ -80,6 +80,9 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
+SPFPM_VERSION = '1.1'
+
+
 class FXfamily(object):
     """Descriptor of the accuracy of a set of fixed-point numbers.
 
@@ -169,11 +172,12 @@ class FXfamily(object):
         """Square-root of two."""
         if self._sqrt2 is None:
             augfamily = FXfamily(self.fraction_bits + self._augbits)
-            x = FXnum(3, augfamily) / 2
+            x = FXnum(3, augfamily) >> 1
             while True:
-                delta = (1 / x - x / 2)
+                # Apply Newton-Raphson iteration to f(x)=2/(x*x)-1:
+                delta = (x * (2 - x * x)) >> 2
                 x += delta
-                if abs(delta.scaledval) <= 2:
+                if abs(delta.scaledval) <= 1:
                     break
             self._sqrt2 = FXnum(x, self)
         return self._sqrt2
@@ -183,11 +187,17 @@ class FXfamily(object):
         """The multiplicative identity."""
         return FXnum(1, self)
 
+    @property
+    def zero(self):
+        """The additive identity."""
+        return FXnum(0, self)
+
     def __hash__(self):
         return hash(self.fraction_bits)
 
     def __repr__(self):
-        return 'FXfamily(n_bits=%d, n_intbits=%r)' % (self.fraction_bits, self.integer_bits)
+        return 'FXfamily(n_bits={}, n_intbits={})'.format(self.fraction_bits,
+                                                          self.integer_bits)
 
     def __eq__(self, other):
         try:
@@ -244,19 +254,17 @@ class FXbrokenError(FXexception):
 
 
 class FXnum(object):
-    def __init__(self, val=0, family=_defaultFamily):
-        converter = family.Convert
+    """Representation of a binary fixed-point real number."""
+
+    def __init__(self, val=0, family=_defaultFamily, **kwargs):
         self.family = family
+        converter = family.Convert
         try:
             # assume that val is similar to FXnum:
             self.scaledval = converter(val.family, val.scaledval)
         except AttributeError:
-            try:
-                # assume that val is subscriptable:
-                self.scaledval = val[0]
-            except TypeError:
-                # assume that val is ordinary numeric type:
-                self.scaledval = int(val * family.scale)
+            self.scaledval = kwargs.get('scaled_value',
+                                        int(val * family.scale))
         self.family.validate(self.scaledval)
 
     def __hash__(self):
@@ -264,7 +272,8 @@ class FXnum(object):
 
     def __repr__(self):
         """Create unambiguous string representation of self"""
-        return 'FXnum([%d], %r)' % (self.scaledval, self.family)
+        return 'FXnum(family={}, scaled_value={})'.format(self.family,
+                                                          self.scaledval)
 
     # conversion operations:
     def __int__(self):
@@ -299,9 +308,8 @@ class FXnum(object):
 
     def __neg__(self):
         """Change sign"""
-        new = FXnum(family=self.family)
-        new.scaledval = -self.scaledval
-        return new
+        return FXnum(family=self.family,
+                     scaled_value=-self.scaledval)
 
     def __pos__(self):
         """Identity operation"""
@@ -350,10 +358,8 @@ class FXnum(object):
     def __add__(self, other):
         """Add another number"""
         other = self._CastOrFail_(other)
-        new = FXnum(family=self.family)
-        new.scaledval = self.scaledval + other.scaledval
-        self.family.validate(new.scaledval)
-        return new
+        return FXnum(family=self.family,
+                     scaled_value=(self.scaledval + other.scaledval))
 
     def __radd__(self, other):
         return FXnum(other, self.family) + self
@@ -361,10 +367,8 @@ class FXnum(object):
     def __sub__(self, other):
         """Subtract another number"""
         other = self._CastOrFail_(other)
-        new = FXnum(family=self.family)
-        new.scaledval = self.scaledval - other.scaledval
-        self.family.validate(new.scaledval)
-        return new
+        return FXnum(family=self.family,
+                     scaled_value=(self.scaledval - other.scaledval))
 
     def __rsub__(self, other):
         return FXnum(other, self.family) - self
@@ -372,23 +376,29 @@ class FXnum(object):
     def __mul__(self, other):
         """Multiply by another number"""
         other = self._CastOrFail_(other)
-        new = FXnum(family=self.family)
-        new.scaledval = (self.scaledval * other.scaledval
-                            + self.family._roundup) // self.family.scale
-        self.family.validate(new.scaledval)
-        return new
+        return FXnum(family=self.family,
+                     scaled_value=((self.scaledval * other.scaledval
+                                            + self.family._roundup)
+                                        // self.family.scale))
 
     def __rmul__(self, other):
         return FXnum(other, self.family) * self
 
+    def __lshift__(self, shift):
+        return FXnum(family=self.family,
+                     scaled_value=(self.scaledval << shift))
+
+    def __rshift__(self, shift):
+        return FXnum(family=self.family,
+                     scaled_value=(self.scaledval >> shift))
+
     def __truediv__(self, other):
         """Divide by another number (without truncation)"""
         other = self._CastOrFail_(other)
-        new = FXnum(family=self.family)
-        new.scaledval = (self.scaledval * self.family.scale
-                            + self.family._roundup) // other.scaledval
-        self.family.validate(new.scaledval)
-        return new
+        return FXnum(family=self.family,
+                     scaled_value=((self.scaledval * self.family.scale
+                                        + self.family._roundup)
+                                    // other.scaledval))
     __div__ = __truediv__
 
     def __rtruediv__(self, other):
@@ -421,14 +431,14 @@ class FXnum(object):
 
     # mathematical functions:
     def __pow__(self, other, modulus=None):
-        """evaluate self ^ other"""
+        """Evaluate self ^ other"""
         assert modulus is None
         if self == 0:
-            return FXnum(1, self.family)
+            return self.family.unity
         ipwr = int(other)
         rmdr = (other -ipwr)
         if rmdr == 0:
-            frac = FXnum(1, self.family)
+            frac = self.family.unity
         else:
             frac = (rmdr * self.log()).exp()
         return self.intpower(ipwr) * frac
@@ -443,12 +453,14 @@ class FXnum(object):
         if pwr < 0:
             pwr *= -1
             invert = True
-        result = FXnum(1, self.family)
+        result = self.family.unity
         term = self
-        while pwr != 0:
+        while True:
             if pwr & 1:
                 result *= term
             pwr >>= 1
+            if not pwr:
+                break
             term *= term
         if invert:
             result = FXnum(1, self.family) / result
@@ -461,15 +473,15 @@ class FXnum(object):
         elif self.scaledval == 0:
             return self
         # calculate crude initial approximation:
-        rt = FXnum(family=self.family)
-        rt.scaledval = 1 << (self.family.fraction_bits // 2)
+        rt = FXnum(family=self.family,
+                   scaled_value=(1 << (self.family.fraction_bits // 2)))
         val = self.scaledval
         while val > 0:
             val >>= 2
             rt.scaledval <<= 1
         # refine approximation by Newton iteration:
         while True:
-            delta = (rt - self / rt) / 2
+            delta = (rt - self / rt) >> 1
             rt -= delta
             if delta.scaledval == 0: break
         return rt
@@ -481,13 +493,13 @@ class FXnum(object):
 
     def _rawexp(self):
         """Brute-force exponential of given number (assumed smallish)"""
-        ex = FXnum(1, self.family)
-        term = FXnum(1, self.family)
-        idx = FXnum(1, self.family)
+        ex = self.family.unity
+        term = self.family.unity
+        idx = 1
         while True:
             term *= self / idx
             ex += term
-            idx += FXnum(1, self.family)
+            idx += 1
             if term.scaledval == 0: break
         return ex
 
@@ -511,7 +523,7 @@ class FXnum(object):
 
     def _rawlog(self, isDelta=False):
         """Compute (natural) logarithm of given number (assumed close to 1)"""
-        lg = FXnum(0, self.family)
+        lg = self.family.zero
         if isDelta:
             z = self / (self + 2)
         else:
@@ -601,26 +613,26 @@ class FXnum(object):
         return (sn, cs)
 
     def _angnorm(self):
-        """helper function for reducing angle modulo 2.Pi"""
+        """Helper function for reducing angle modulo 2.Pi"""
         reflect = False
         ang = self
         if ang < 0:
             ang *= -1
             reflect = True
-        # find nearest multiple of pi/2:
+        # Find nearest multiple of pi/2:
         halfpi = self.family.pi / 2
         idx = int(ang / halfpi + 0.5)
         ang -= idx * halfpi
         return (ang, idx, reflect)
 
     def _rawQsine(self, doCos=False, doHyp=False):
-        """helper function for brute-force calculation of sine & cosine"""
-        sn = FXnum(0, self.family)
+        """Helper function for brute-force calculation of sine & cosine"""
+        sn = self.family.zero
         if doHyp:
             x2 = self * self
         else:
             x2 = -self * self
-        term = FXnum(1, self.family)
+        term = self.family.unity
         if doCos: idx = 1
         else: idx = 2
         while True:
