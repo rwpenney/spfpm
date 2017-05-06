@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # Simple Python Fixed-Point Module (SPFPM)
-# (C)Copyright 2006-2014, RW Penney
+# (C)Copyright 2006-2017, RW Penney
 
 
-# This file is (C)Copyright 2006-2014, RW Penney
+# This file is (C)Copyright 2006-2017, RW Penney
 # and is released under the Python-2.4.2 license
 # (see http://www.python.org/psf/license),
 # it therefore comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
@@ -80,7 +80,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.1'
+SPFPM_VERSION = '1.2'
 
 
 class FXfamily(object):
@@ -201,17 +201,17 @@ class FXfamily(object):
 
     def __eq__(self, other):
         try:
-            return self.fraction_bits == other.fraction_bits
+            return (self.fraction_bits == other.fraction_bits
+                    and self.integer_bits == other.integer_bits)
         except AttributeError:
-            pass
-        return false
+            return false
 
     def __ne__(self, other):
         try:
-            return self.fraction_bits != other.fraction_bits
+            return (self.fraction_bits != other.fraction_bits
+                    or self.integer_bits != other.integer_bits)
         except AttributeError:
-            pass
-        return true
+            return true
 
     def Convert(self, other, other_val):
         """Convert number from different number of fraction-bits"""
@@ -256,6 +256,8 @@ class FXbrokenError(FXexception):
 class FXnum(object):
     """Representation of a binary fixed-point real number."""
 
+    __slots__ = ('family', 'scaledval')
+
     def __init__(self, val=0, family=_defaultFamily, **kwargs):
         self.family = family
         converter = family.Convert
@@ -291,7 +293,7 @@ class FXnum(object):
         """Turn number into FXnum or check that it is in same family"""
         try:
             # Binary operations must involve members of same family
-            if not self.family is other.family:
+            if self.family != other.family:
                 raise FXfamilyError(1)
         except AttributeError:
             # Automatic casting from types other than FXnum is allowed:

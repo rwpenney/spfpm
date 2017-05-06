@@ -3,8 +3,6 @@
 # RW Penney, January 2007
 
 import matplotlib, numpy, optparse
-
-matplotlib.use('qt4agg')
 import matplotlib.pyplot as plt
 
 from FixedPoint import *

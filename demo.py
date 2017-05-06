@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 # Demonstration of Simple Python Fixed-Point Module
-# (C)Copyright 2006-2014, RW Penney
+# (C)Copyright 2006-2017, RW Penney
 
 import time
 try:
     import matplotlib, numpy
-    matplotlib.use('qt4agg')
     import matplotlib.pyplot as plt
     HAVE_MATPLOTLIB = True
 except ImportError:
@@ -52,19 +51,35 @@ def speedDemo():
     """calculate indicative speed of floating-point operations"""
 
     print('=== speed test ===')
-    for res, count in [ (16, 10000), (32, 10000), (64, 10000), (128, 10000), (256, 10000), (512, 10000) ]:
+    for res, count in [ (16, 10000), (32, 10000),
+                        (64, 10000), (128, 10000),
+                        (256, 10000), (512, 10000) ]:
         fam = FixedPoint.FXfamily(res)
         x = FixedPoint.FXnum(0.5, fam)
         lmb = FixedPoint.FXnum(3.6, fam)
         one = FixedPoint.FXnum(1.0, fam)
         t0 = time.clock()
-        for i in range(0, count):
+        for i in range(count):
             # use logistic-map in chaotic region:
             x = lmb * x * (one - x)
         t1 = time.clock()
         ops = count * 3
         Dt = t1 - t0
-        print('{0} {1}-bit operations in {2:.2f}s ~ {3:.2g} FLOPS'.format(ops, res, Dt, (ops / Dt)))
+        print('{0} {1}-bit arithmetic operations in {2:.2f}s ~ {3:.2g} FLOPS' \
+                .format(ops, res, Dt, (ops / Dt)))
+
+    for res, count in [ (4, 10000), (8, 10000), (12, 10000),
+                        (24, 10000), (48, 10000), (128, 10000),
+                        (512, 10000) ]:
+        fam = FixedPoint.FXfamily(res, 4)
+        x = FixedPoint.FXnum(2, fam)
+        t0 = time.clock()
+        for i in range(count):
+            y = x.sqrt()
+        t1 = time.clock()
+        Dt = (t1 - t0)
+        print('{} {}-bit square-roots in {:.3g}s ~ {:.3g}/ms' \
+                .format(count, res, Dt, count*1e-3/Dt))
 
 
 def plotDemo():
@@ -80,7 +95,7 @@ def plotDemo():
     truepoints = numpy.array([[b_min, pi_true], [b_max, pi_true]])
 
     plt.xlabel('bits')
-    plt.ylabel('$4 tan^{-1}1$')
+    plt.ylabel(r'$4 tan^{-1}1$')
     plt.xlim([b_min, b_max])
     plt.ylim([3.13, 3.16])
     plt.grid(True)

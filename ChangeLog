@@ -1,5 +1,10 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+06May17	- *** spfpm-1.2 released
+
+05May17	- removed need to have same FXfamily object when combining FXnums
+	- added '__slots__' specifier to FXnum fields
+
 15Jul14	- *** spfpm-1.1 released
 
 15Jul14	- added left/right shift operators
@@ -98,4 +103,3 @@ ChangeLog for Simple Python Fixed-Point Module
 02Jan07	- converted RCS repository into SVN
 
 26Dec06	- *** prototype of spfpm-0.1 released
-

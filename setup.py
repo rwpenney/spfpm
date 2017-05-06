@@ -13,10 +13,11 @@ setup(
     keywords = 'arithmetic, fixed-point, trigonometry, arbitrary precision',
     license = 'PSF Python License',
     long_description = \
-        'FixedPoint (SPFPM) is a pure-Python module which provides ' + \
-        'basic facilities for manipulating fixed-point numbers ' + \
+        'The Simple Python Fixed Point Module (SPFPM) ' + \
+        'is a pure-Python module which provides basic facilities ' + \
+        'for manipulating binary fixed-point numbers ' + \
         'of essentially arbitrary precision. ' + \
-        'It aims to be more suitable for simulating binary ' + \
+        'It aims to be more suitable for simulating digital ' + \
         'fixed-point artihmetic within electronic hardware ' + \
         '(e.g. for digital signal processing (DSP) applications) ' + \
         'than the Decimal package, which is more concerned ' + \
@@ -26,4 +27,10 @@ setup(
     name = 'spfpm',
     url = 'http://www.sourceforge.net/projects/pyfixedpoint',
     version = SPFPM_VERSION,
-    py_modules = [ 'FixedPoint' ])
+    py_modules = [ 'FixedPoint' ],
+    classifiers = [ 'Programming Language :: Python :: 3',
+                    'Intended Audience :: Science/Research',
+                    'Operating System :: OS Independent',
+                    'Scientific/Engineering :: Mathematics',
+                    'Software Development :: Embedded Systems' ]
+)
