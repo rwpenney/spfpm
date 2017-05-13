@@ -279,6 +279,15 @@ class FXnum(object):
                                         int(val * family.scale))
         self.family.validate(self.scaledval)
 
+    @classmethod
+    def _rawbuild(cls, fam, sv):
+        """Shortcut for creating new FXnum instance, for internal use only."""
+        num = object.__new__(cls)
+        fam.validate(sv)
+        num.family = fam
+        num.scaledval = sv
+        return num
+
     def __hash__(self):
         return hash(self.scaledval) ^ hash(self.family)
 
@@ -320,8 +329,7 @@ class FXnum(object):
 
     def __neg__(self):
         """Change sign"""
-        return FXnum(family=self.family,
-                     scaled_value=-self.scaledval)
+        return FXnum._rawbuild(self.family, -self.scaledval)
 
     def __pos__(self):
         """Identity operation"""
@@ -370,8 +378,8 @@ class FXnum(object):
     def __add__(self, other):
         """Add another number"""
         other = self._CastOrFail_(other)
-        return FXnum(family=self.family,
-                     scaled_value=(self.scaledval + other.scaledval))
+        return FXnum._rawbuild(self.family,
+                               (self.scaledval + other.scaledval))
 
     def __radd__(self, other):
         return FXnum(other, self.family) + self
@@ -379,8 +387,8 @@ class FXnum(object):
     def __sub__(self, other):
         """Subtract another number"""
         other = self._CastOrFail_(other)
-        return FXnum(family=self.family,
-                     scaled_value=(self.scaledval - other.scaledval))
+        return FXnum._rawbuild(self.family,
+                               (self.scaledval - other.scaledval))
 
     def __rsub__(self, other):
         return FXnum(other, self.family) - self
@@ -388,8 +396,8 @@ class FXnum(object):
     def __mul__(self, other):
         """Multiply by another number"""
         other = self._CastOrFail_(other)
-        return FXnum(family=self.family,
-                     scaled_value=((self.scaledval * other.scaledval
+        return FXnum._rawbuild(self.family,
+                               ((self.scaledval * other.scaledval
                                             + self.family._roundup)
                                         // self.family.scale))
 
@@ -397,18 +405,18 @@ class FXnum(object):
         return FXnum(other, self.family) * self
 
     def __lshift__(self, shift):
-        return FXnum(family=self.family,
-                     scaled_value=(self.scaledval << shift))
+        return FXnum._rawbuild(self.family,
+                               (self.scaledval << shift))
 
     def __rshift__(self, shift):
-        return FXnum(family=self.family,
-                     scaled_value=(self.scaledval >> shift))
+        return FXnum._rawbuild(self.family,
+                               (self.scaledval >> shift))
 
     def __truediv__(self, other):
         """Divide by another number (without truncation)"""
         other = self._CastOrFail_(other)
-        return FXnum(family=self.family,
-                     scaled_value=((self.scaledval * self.family.scale
+        return FXnum._rawbuild(self.family,
+                               ((self.scaledval * self.family.scale
                                         + self.family._roundup)
                                     // other.scaledval))
     __div__ = __truediv__

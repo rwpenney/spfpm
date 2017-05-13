@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+13May17	- Added optimized FXnum constructor to improve speed of arithmetic
+
 06May17	- *** spfpm-1.2 released
 
 05May17	- removed need to have same FXfamily object when combining FXnums
