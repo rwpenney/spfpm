@@ -80,7 +80,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.2'
+SPFPM_VERSION = '1.3-beta'
 
 
 class FXfamily(object):
@@ -113,14 +113,6 @@ class FXfamily(object):
         # Cached values of various mathematical constants:
         self._exp1, self._log2, self._pi, self._sqrt2 = (None,) * 4
 
-        # Estimate number of extra bits required for accurate values of Pi etc,
-        # assuming worst-case of O(n_bits) operations, each with 1-LSB error:
-        self._augbits = 4
-        nb = n_bits
-        while nb > 0:
-            self._augbits += 1
-            nb >>= 1
-
     @property
     def resolution(self):
         """The number of fractional binary digits"""
@@ -131,7 +123,7 @@ class FXfamily(object):
         """Inverse natural logarithm of unity."""
         if self._exp1 is None:
             # Brute-force calculation of exp(1) using augmented accuracy:
-            augfamily = FXfamily(self.fraction_bits + self._augbits)
+            augfamily = self.augment()
             augexp = FXnum(1, augfamily)._rawexp()
             arg = 1 / FXnum(4, augfamily)
             q0 = arg._rawexp()
@@ -146,7 +138,7 @@ class FXfamily(object):
         if self._log2 is None:
             # Brute-force calculation of log(2) using augmented accuracy
             #   via log(2) = log(2^19 / 3^12) + 6log(1 + 1/8):
-            augfamily = FXfamily(self.fraction_bits + self._augbits)
+            augfamily = self.augment()
             auglog2 = FXnum(2, augfamily)._rawlog()
             three12 = (9 * 9 * 9) * (9 * 9 * 9)
             two19 = 1 << 19
@@ -161,7 +153,7 @@ class FXfamily(object):
         """Ratio of circle's perimeter to its diameter."""
         if self._pi is None:
             # Brute-force calculation of 8*atan(pi/8) using augmented accuracy:
-            augfamily = FXfamily(self.fraction_bits + self._augbits)
+            augfamily = self.augment()
             tan8 = (augfamily.sqrt2 - 1)
             augpi = 8 * tan8._rawarctan()
             self._pi = FXnum(augpi, self)
@@ -171,7 +163,7 @@ class FXfamily(object):
     def sqrt2(self):
         """Square-root of two."""
         if self._sqrt2 is None:
-            augfamily = FXfamily(self.fraction_bits + self._augbits)
+            augfamily = self.augment()
             x = FXnum(3, augfamily) >> 1
             while True:
                 # Apply Newton-Raphson iteration to f(x)=2/(x*x)-1:
@@ -213,7 +205,7 @@ class FXfamily(object):
         except AttributeError:
             return true
 
-    def Convert(self, other, other_val):
+    def convert(self, other, other_val):
         """Convert number from different number of fraction-bits"""
         bit_inc = self.fraction_bits - other.fraction_bits
         if bit_inc == 0:
@@ -227,6 +219,24 @@ class FXfamily(object):
             return new_val
         else:
             return (other_val >> -bit_inc)
+
+    def augment(self, opcount=None):
+        """Construct new FXfamily with enhanced resolution.
+
+        The returned FXfamily will have an increased number of fractional bits,
+        sufficient to accommodate the worst-case accumulation of 1-LSB errors
+        over the specified number of operations. If the supplied
+        operation-count is None, then this defaults to
+        the existing number of fractional digits.
+        """
+
+        nb = opcount if opcount is not None else self.fraction_bits
+        augbits = 4
+        while nb > 0:
+            augbits += 1
+            nb >>= 1
+
+        return FXfamily(self.fraction_bits + augbits)
 # ^^^ class FXfamily ^^^
 
 _defaultFamily = FXfamily()
@@ -260,7 +270,7 @@ class FXnum(object):
 
     def __init__(self, val=0, family=_defaultFamily, **kwargs):
         self.family = family
-        converter = family.Convert
+        converter = family.convert
         try:
             # assume that val is similar to FXnum:
             self.scaledval = converter(val.family, val.scaledval)

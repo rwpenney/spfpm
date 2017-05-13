@@ -31,6 +31,6 @@ setup(
     classifiers = [ 'Programming Language :: Python :: 3',
                     'Intended Audience :: Science/Research',
                     'Operating System :: OS Independent',
-                    'Scientific/Engineering :: Mathematics',
-                    'Software Development :: Embedded Systems' ]
+                    'Topic :: Scientific/Engineering :: Mathematics',
+                    'Topic :: Software Development :: Embedded Systems' ]
 )
