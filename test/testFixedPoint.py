@@ -16,71 +16,8 @@ class FixedPointTest(unittest.TestCase):
                         '{} and {} differ by more than {} ({})'.format(
                             first, second, tol, (first - second)))
 
-    def testRawBuild(self):
-        fam = FXfamily(10, 5)
-        x = FXnum(val=9.7531, family=fam)
-        xraw = FXnum._rawbuild(fam, x.scaledval)
-        self.assertEqual(x, xraw)
-        self.assertIsInstance(x, FXnum)
-        self.assertIsInstance(xraw, FXnum)
-        self.assertIsNot(x, xraw)
 
-    def testLongRounding(self):
-        """Integers should round towards minus infinity"""
-        for base in range(2, 8):
-            for step in range(1, 5):
-                for inc in range(1, base):
-                    pos = int((base * step) + inc)
-                    self.assertEqual(int(step), (pos // base))
-                    neg = int((base * -step) - inc)
-                    self.assertEqual(int(-step - 1), (neg // base))
-
-    def testBoolConditions(self):
-        """Values used in boolean expressions should behave as true/false"""
-        if FXnum(0):
-            self.fail()
-        if FXnum(1):
-            pass
-        else:
-            self.fail()
-
-    def testImmutable(self):
-        """Arithmetic operations on object should not alter orignal value"""
-        scale = 0.297
-        for i in range(-8, 8):
-            orig = FXnum(i * scale)
-
-            x = FXnum(i * scale)
-            x0 = x
-            if x is x0:
-                pass
-            else:
-                self.fail()
-
-            x = FXnum(i * scale)
-            x0 = x
-            x += 1
-            self.assertEqual(orig, x0)
-            if x is x0: self.fail()
-
-            x = FXnum(i * scale)
-            x0 = x
-            x -= 1
-            self.assertEqual(orig, x0)
-            if x is x0: self.fail()
-
-            x = FXnum(i * scale)
-            x0 = x
-            x *= 2
-            self.assertEqual(orig, x0)
-            if x is x0: self.fail()
-
-            x = FXnum(i * scale)
-            x0 = x
-            x /= 2
-            self.assertEqual(orig, x0)
-            if x is x0: self.fail()
-
+class TestFamilies(FixedPointTest):
     def testFamEquality(self):
         """Check tests on equivalence of FXfamilies"""
         idxlist = [8, 16, 24, 33, 59]
@@ -96,42 +33,106 @@ class FixedPointTest(unittest.TestCase):
                     self.assertFalse(fam0 == fam1)
                     self.assertTrue(fam0 != fam1)
 
-    def testConversion(self):
-        """Check that conversion between families preserves values"""
-        famlist = [FXfamily(b) for b in [32, 40, 48, 80, 120]]
-        for i in range(1,10):
-            xpos = (float)(1 << (2 * i)) + 1.0 / (1 << i);
-            for x in [xpos, -xpos]:
-               for fam0 in famlist:
-                    fp0 = FXnum(x, fam0)
-                    for fam1 in famlist:
-                        fp1 = FXnum(fp0, fam1)
-                        try: f = (fp0 == fp1)
-                        except FXfamilyError:
-                            self.assertFalse(fam0 is fam1)
-                        else:
-                            self.assertTrue(fam0 is fam1)
-                        self.assertAlmostEqual(x, float(fp0))
-                        self.assertAlmostEqual(x, float(fp1))
+    def testFamilyProtection(self):
+        """Check that arithmetic operators do not transmute resolution families"""
+        famlist = [FXfamily(res) for res in [8, 16, 40, 90]]
+        for fam0 in famlist:
+            for fam1 in famlist:
+                x = FXnum(2, fam0)
+                y = FXnum(3, fam1)
+                try: a = x + y
+                except FXfamilyError: self.assertFalse(fam0 is fam1)
+                else: self.assertTrue(fam0 is fam1)
+                try: a = x - y
+                except FXfamilyError: self.assertFalse(fam0 is fam1)
+                else: self.assertTrue(fam0 is fam1)
+                try: a = x * y
+                except FXfamilyError: self.assertFalse(fam0 is fam1)
+                else: self.assertTrue(fam0 is fam1)
+                try: a = x / y
+                except FXfamilyError: self.assertFalse(fam0 is fam1)
+                else: self.assertTrue(fam0 is fam1)
 
-    def testPrinting(self):
-        """Check conversion to string"""
-        for i in range(1, 10):
-            v = 2 ** i
-            for x in [v, -v, 1.0/v, -1.0/v]:
-                fpa = "%.8g" % x
-                fpx = str(FXnum(x))
-                self.assertEqual(fpa, fpx)
+    def testMathConsts(self):
+        """Check various mathematical constants against math module."""
+        for ident, target in [('unity', 1.0),
+                              ('exp1',  math.e),
+                              ('log2',  math.log(2)),
+                              ('pi',    math.pi),
+                              ('sqrt2', math.sqrt(2))]:
+            self.assertAlmostEqual(getattr(FXfamily(64), ident),
+                                   target, places=15)
 
-    def testRepresentation(self):
-        """Check repr() functionality"""
-        for i in range(1, 30):
-            v = 1.7 ** i
-            for x in [v, -v, 1.0/v, -1.0/v]:
-                fp0 = FXnum(x)
-                # ensure that value extracted via repr() is in same FXfamily:
-                fpb = FXnum(eval(repr(fp0)), family=fp0.family)
-                self.assertEqual(fp0, fpb)
+    def testConstPrecision(self):
+        """Check claimed precision of constants such as pi, log2, etc."""
+
+        extra_bits = 64
+        for res in (8, 16, 32, 64, 256, 1024):
+            fam0 = FXfamily(res)
+            fam_extra = FXfamily(res + extra_bits)
+
+            for field in ('exp1', 'log2', 'pi', 'sqrt2'):
+                x0 = getattr(fam0, field).scaledval
+                x_extra = getattr(fam_extra, field).scaledval
+
+                self.assertEqual(x0, x_extra >> extra_bits)
+
+    def testIntRange(self):
+        """Check detection of overflow of integer part."""
+        for top in [-3, -2, 0, 2, 4, 6]:
+            fam = FXfamily(16, top)
+            a = FXnum(1.0/16.01, fam)
+            zero = FXnum(0, fam)
+            limit = 1 << (top + 4 - 1)  # Unlikely to be valid FXnum(,fam)
+
+            cnt, x, y = 0, zero, zero
+            while cnt < (limit + 5):
+                cnt += 1
+
+                try: x += a
+                except FXoverflowError:
+                    if cnt <= limit: self.fail()
+                else:
+                    if cnt > limit: self.fail()
+
+                try: y -= a
+                except FXoverflowError:
+                    if cnt <= limit: self.fail()
+                else:
+                    if cnt > limit: self.fail()
+
+
+class TestNumInit(FixedPointTest):
+    def testRawBuild(self):
+        """Check equivalence of FXnum._rawbuild() and FXnum()."""
+        fam = FXfamily(10, 5)
+        x = FXnum(val=9.7531, family=fam)
+        xraw = FXnum._rawbuild(fam, x.scaledval)
+        self.assertEqual(x, xraw)
+        self.assertIsInstance(x, FXnum)
+        self.assertIsInstance(xraw, FXnum)
+        self.assertIsNot(x, xraw)
+
+    def testLongRounding(self):
+        """Check assumptions about integers rounding towards minus infinity."""
+        for base in range(2, 8):
+            for step in range(1, 5):
+                for inc in range(1, base):
+                    pos = int((base * step) + inc)
+                    self.assertEqual(int(step), (pos // base))
+                    neg = int((base * -step) - inc)
+                    self.assertEqual(int(-step - 1), (neg // base))
+
+
+class TestNumConvert(FixedPointTest):
+    def testBoolConditions(self):
+        """Values used in boolean expressions should behave as true/false"""
+        if FXnum(0):
+            self.fail()
+        if FXnum(1):
+            pass
+        else:
+            self.fail()
 
     def testIntCasts(self):
         """Rounding on casting to int should match float-conversions"""
@@ -154,6 +155,48 @@ class FixedPointTest(unittest.TestCase):
             except FXexception:
                 self.fail()
 
+    def testFamilyConversion(self):
+        """Check that conversion between families preserves values"""
+        famlist = [FXfamily(b) for b in [32, 40, 48, 80, 120]]
+        for i in range(1,10):
+            xpos = (float)(1 << (2 * i)) + 1.0 / (1 << i);
+            for x in [xpos, -xpos]:
+               for fam0 in famlist:
+                    fp0 = FXnum(x, fam0)
+                    for fam1 in famlist:
+                        fp1 = FXnum(fp0, fam1)
+                        try: f = (fp0 == fp1)
+                        except FXfamilyError:
+                            self.assertFalse(fam0 is fam1)
+                        else:
+                            self.assertTrue(fam0 is fam1)
+                        self.assertAlmostEqual(x, float(fp0))
+                        self.assertAlmostEqual(x, float(fp1))
+
+
+
+class TestNumPrint(FixedPointTest):
+    def testPrinting(self):
+        """Check conversion to string"""
+        for i in range(1, 10):
+            v = 2 ** i
+            for x in [v, -v, 1.0/v, -1.0/v]:
+                fpa = "%.8g" % x
+                fpx = str(FXnum(x))
+                self.assertEqual(fpa, fpx)
+
+    def testRepresentation(self):
+        """Check repr() functionality"""
+        for i in range(1, 30):
+            v = 1.7 ** i
+            for x in [v, -v, 1.0/v, -1.0/v]:
+                fp0 = FXnum(x)
+                # ensure that value extracted via repr() is in same FXfamily:
+                fpb = FXnum(eval(repr(fp0)), family=fp0.family)
+                self.assertEqual(fp0, fpb)
+
+
+class TestArithmetic(FixedPointTest):
     def testAddition(self):
         """Addition operators should promote & commute"""
         scale = 0.125
@@ -271,49 +314,45 @@ class FixedPointTest(unittest.TestCase):
         self.assertEqual(FXnum(12, fam) >> 2, 3)
         self.assertEqual(FXnum(-71 * 1024, fam) >> 12, -17.75)
 
-    def testFamilyProtection(self):
-        """Check that arithmetic operators do not transmute resolution families"""
-        famlist = [FXfamily(res) for res in [8, 16, 40, 90]]
-        for fam0 in famlist:
-            for fam1 in famlist:
-                x = FXnum(2, fam0)
-                y = FXnum(3, fam1)
-                try: a = x + y
-                except FXfamilyError: self.assertFalse(fam0 is fam1)
-                else: self.assertTrue(fam0 is fam1)
-                try: a = x - y
-                except FXfamilyError: self.assertFalse(fam0 is fam1)
-                else: self.assertTrue(fam0 is fam1)
-                try: a = x * y
-                except FXfamilyError: self.assertFalse(fam0 is fam1)
-                else: self.assertTrue(fam0 is fam1)
-                try: a = x / y
-                except FXfamilyError: self.assertFalse(fam0 is fam1)
-                else: self.assertTrue(fam0 is fam1)
+    def testImmutable(self):
+        """Arithmetic operations on object should not alter orignal value"""
+        scale = 0.297
+        for i in range(-8, 8):
+            orig = FXnum(i * scale)
 
-    def testIntRange(self):
-        for top in [-3, -2, 0, 2, 4, 6]:
-            fam = FXfamily(16, top)
-            a = FXnum(1.0/16.01, fam)
-            zero = FXnum(0, fam)
-            limit = 1 << (top + 4 - 1)  # Unlikely to be valid FXnum(,fam)
+            x = FXnum(i * scale)
+            x0 = x
+            if x is x0:
+                pass
+            else:
+                self.fail()
 
-            cnt, x, y = 0, zero, zero
-            while cnt < (limit + 5):
-                cnt += 1
+            x = FXnum(i * scale)
+            x0 = x
+            x += 1
+            self.assertEqual(orig, x0)
+            if x is x0: self.fail()
 
-                try: x += a
-                except FXoverflowError:
-                    if cnt <= limit: self.fail()
-                else:
-                    if cnt > limit: self.fail()
+            x = FXnum(i * scale)
+            x0 = x
+            x -= 1
+            self.assertEqual(orig, x0)
+            if x is x0: self.fail()
 
-                try: y -= a
-                except FXoverflowError:
-                    if cnt <= limit: self.fail()
-                else:
-                    if cnt > limit: self.fail()
+            x = FXnum(i * scale)
+            x0 = x
+            x *= 2
+            self.assertEqual(orig, x0)
+            if x is x0: self.fail()
 
+            x = FXnum(i * scale)
+            x0 = x
+            x /= 2
+            self.assertEqual(orig, x0)
+            if x is x0: self.fail()
+
+
+class TestPowers(FixedPointTest):
     def testSqrt(self):
         """sqrt method should find square-roots"""
         fam62 = FXfamily(62)
@@ -331,6 +370,25 @@ class FixedPointTest(unittest.TestCase):
                 if i == 0:
                     self.assertEqual(FXnum(0, fam62), rt)
 
+    def testPow(self):
+        """Check raising FXnums to powers."""
+        fam62 = FXfamily(62)
+        scale = 0.205
+        scale2 = 0.382
+        for i in range(1, 32):
+            x = i * scale
+
+            pwr = FXnum(0, fam62) ** x
+            self.assertEqual(FXnum(1, fam62), pwr)
+
+            for j in range(-16, 16):
+                y = j * scale2
+                pwr_true = math.pow(x, y)
+                pwr = FXnum(x, fam62) ** y
+                self.assertAlmostEqual(pwr_true, pwr)
+
+
+class TestExpLog(FixedPointTest):
     def testExp(self):
         """Exponent method should agree with math.exp"""
         fam62 = FXfamily(62)
@@ -365,20 +423,8 @@ class FixedPointTest(unittest.TestCase):
             logexp = exp.log()
             self.assertAlmostEqual(x, float(logexp))
 
-    def testPow(self):
-        fam62 = FXfamily(62)
-        scale = 0.205
-        scale2 = 0.382
-        for i in range(1, 32):
-            x = i * scale
-            pwr = FXnum(0, fam62) ** x
-            self.assertEqual(FXnum(1, fam62), pwr)
-            for j in range(-16, 16):
-                y = j * scale2
-                pwr_true = math.pow(x, y)
-                pwr = FXnum(x, fam62) ** y
-                self.assertAlmostEqual(pwr_true, pwr)
 
+class TestTrig(FixedPointTest):
     def testSinCos(self):
         """sin/cos methods agree with math.sin/cos"""
         fam62 = FXfamily(62)
@@ -423,31 +469,6 @@ class FixedPointTest(unittest.TestCase):
                 ics = trig.acos()
                 self.assertTrue(0 <= ics and ics <= fam62.pi)
                 self.assertAlmostEqual(float(trig), float(ics.cos()))
-
-    def testMathConsts(self):
-        """Check various mathematical constants against math module."""
-        for ident, target in [('unity', 1.0),
-                              ('exp1',  math.e),
-                              ('log2',  math.log(2)),
-                              ('pi',    math.pi),
-                              ('sqrt2', math.sqrt(2))]:
-            self.assertAlmostEqual(getattr(FXfamily(64), ident),
-                                   target, places=15)
-
-    def testConstPrecision(self):
-        """Check claimed precision of constants such as pi, log2, etc."""
-
-        extra_bits = 64
-        for res in (8, 16, 32, 64, 256, 1024):
-            fam0 = FXfamily(res)
-            fam_extra = FXfamily(res + extra_bits)
-
-            for field in ('exp1', 'log2', 'pi', 'sqrt2'):
-                x0 = getattr(fam0, field).scaledval
-                x_extra = getattr(fam_extra, field).scaledval
-
-                self.assertEqual(x0, x_extra >> extra_bits)
-
 
 
 if __name__ == "__main__":
