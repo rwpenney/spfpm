@@ -2,7 +2,8 @@
 # Demonstration of Simple Python Fixed-Point Module
 # (C)Copyright 2006-2017, RW Penney
 
-import time
+import argparse, time
+from collections import OrderedDict
 try:
     import matplotlib, numpy
     import matplotlib.pyplot as plt
@@ -82,11 +83,11 @@ def speedDemo():
                 .format(count, res, Dt, count*1e-3/Dt))
 
 
-def plotDemo():
+def piPlot():
     """Plot graph of approximations to Pi"""
 
-    pi_true = FixedPoint.FXfamily(200).pi
     b_min, b_max = 8, 25
+    pi_true = FixedPoint.FXfamily(b_max + 40).pi
     pipoints = []
     for res in range(b_min, b_max+1):
         val = 4 * FixedPoint.FXnum(1, FixedPoint.FXfamily(res)).atan()
@@ -99,16 +100,65 @@ def plotDemo():
     plt.xlim([b_min, b_max])
     plt.ylim([3.13, 3.16])
     plt.grid(True)
-    for arr in (truepoints, pipoints):
-        plt.plot(arr[:,0], arr[:,1])
+    for arr, style in ((truepoints, '--'), (pipoints, '-')):
+        plt.plot(arr[:,0], arr[:,1], ls=style)
     plt.show()
 
 
-if __name__ == "__main__":
-    basicDemo()
-    overflowDemo()
-    speedDemo()
+def piAccuracyPlot():
+    """Plot graph of fractional bits wasted due to accumulated roundoff."""
+
+    def lostbits(x, x_acc):
+        fam_acc = x_acc.family
+        eps = (FixedPoint.FXnum(x, fam_acc) - x_acc)
+        return (abs(eps).log() / fam_acc.log2
+                    + x.family.resolution)
+
+    losses = []
+    for bits in range(4, 500, 4):
+        fam_acc = FixedPoint.FXfamily(bits + 40)
+        fam = FixedPoint.FXfamily(bits)
+        pi_true = fam_acc.pi
+        pi_family = fam.pi
+        atan = 4 * FixedPoint.FXnum(1, fam).atan()
+        losses.append((bits, lostbits(atan, pi_true),
+                             lostbits(pi_family, pi_true)))
+    losses = numpy.array(losses)
+
+    plt.xlabel('resolution bits')
+    plt.ylabel('error bits')
+    plt.grid(True)
+    plt.plot(losses[:,0], losses[:,1], label=r'$4 tan^{-1} 1$')
+    plt.plot(losses[:,0], losses[:,2], label=r'$\pi_{family}$')
+    plt.legend(loc='best', fontsize='small')
+    plt.show()
+
+
+def main():
+    demos = OrderedDict([
+        ('basic',       basicDemo),
+        ('overflow',    overflowDemo),
+        ('speed',       speedDemo) ])
     if HAVE_MATPLOTLIB:
-        plotDemo()
+        demos['piplot'] = piPlot
+        demos['piaccplot'] = piAccuracyPlot
+
+    parser = argparse.ArgumentParser(
+                description='Rudimentary demonstrations of'
+                            ' the Simple Python Fixed-point Module (SPFPM)')
+    parser.add_argument('-a', '--all', action='store_true')
+    parser.add_argument('demos', nargs='*',
+            help='Demo applications ({})'.format('/'.join(demos.keys())))
+    args = parser.parse_args()
+
+    if args.all or not args.demos:
+        args.demos = list(demos.keys())
+
+    for demoname in args.demos:
+        demos[demoname]()
+
+
+if __name__ == "__main__":
+    main()
 
 # vim: set ts=4 sw=4 et:
