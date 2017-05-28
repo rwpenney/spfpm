@@ -20,7 +20,7 @@ install:
 
 .PHONY:	all-dists
 all-dists:
-	python setup.py sdist --formats=gztar,zip
+	${PYTHON} setup.py sdist --formats=gztar,zip
 
 .PHONY:	clean
 clean:

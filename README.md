@@ -17,7 +17,12 @@ The package provides:
 * Support for numbers with thousands of bits of resolution
 
 Development currently targets [Python](https://www.python.org)
-versions 3.2 and later.
+versions 3.2 and later, although the library should also
+work with python-2.7.
+The latest version of spfpm can be found
+on [GitHub](https://github.com/rwpenney/spfpm),
+with earlier versions also available
+on [SourceForge](https://sourceforge.net/projects/pyfixedpoint/).
 
 
 ## Examples
@@ -61,9 +66,16 @@ print('log2 = ', fam100.log2)
 print('sqrt2 = ', fam100.sqrt2)
 ```
 
+This produces the following printed values of those constants:
+* 3.141592653589793238462643383279 ~~333~~
+* 0.69314718055994530941723212145 ~~7981~~
+* 1.414213562373095048801688724209 ~~176~~
+The struck-through digits show where the values computed
+at 100-bit precision differ from the true values of these constants.
+
 
 ## Licensing
 
-All files are released under the Python PSF License
-(see http://www.python.org/psf/license)
+All files are released under
+the [Python PSF License](https://docs.python.org/3/license.html)
 and are Copyright 2006-2017 RW Penney.

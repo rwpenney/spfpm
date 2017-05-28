@@ -2,6 +2,7 @@
 # Demonstration of Simple Python Fixed-Point Module
 # (C)Copyright 2006-2017, RW Penney
 
+from __future__ import print_function
 import argparse, time
 from collections import OrderedDict
 try:

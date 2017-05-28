@@ -1,5 +1,8 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+28May17	- Improved efficiency of computation of log(2)
+	Converted README.txt into markdown
+
 13May17	- Added optimized FXnum constructor to improve speed of arithmetic
 	Added command-line switches for demonstration script
 	Added plot of Pi accuracy to demonstration script
