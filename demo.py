@@ -105,33 +105,78 @@ def piPlot():
     plt.show()
 
 
-def piAccuracyPlot():
+class ConstAccuracyPlot(object):
     """Plot graph of fractional bits wasted due to accumulated roundoff."""
 
+    @classmethod
+    def calcConst(cls, fam):
+        return FXnum(1, fam)
+
+    @classmethod
+    def getConst(cls, fam):
+        return fam.unity
+
+    @classmethod
+    def getLabels(cls):
+        return ('1', '1')
+
+    @staticmethod
     def lostbits(x, x_acc):
         fam_acc = x_acc.family
         eps = (FixedPoint.FXnum(x, fam_acc) - x_acc)
         return (abs(eps).log() / fam_acc.log2
                     + x.family.resolution)
 
-    losses = []
-    for bits in range(4, 500, 4):
-        fam_acc = FixedPoint.FXfamily(bits + 40)
-        fam = FixedPoint.FXfamily(bits)
-        pi_true = fam_acc.pi
-        pi_family = fam.pi
-        atan = 4 * FixedPoint.FXnum(1, fam).atan()
-        losses.append((bits, lostbits(atan, pi_true),
-                             lostbits(pi_family, pi_true)))
-    losses = numpy.array(losses)
+    @classmethod
+    def draw(cls):
+        losses = []
+        for bits in range(4, 500, 4):
+            fam_acc = FixedPoint.FXfamily(bits + 40)
+            fam = FixedPoint.FXfamily(bits)
+            const_true = cls.getConst(fam_acc)
+            const_family = cls.getConst(fam)
+            approx = cls.calcConst(fam)
+            losses.append((bits, cls.lostbits(approx, const_true),
+                                 cls.lostbits(const_family, const_true)))
+        losses = numpy.array(losses)
 
-    plt.xlabel('resolution bits')
-    plt.ylabel('error bits')
-    plt.grid(True)
-    plt.plot(losses[:,0], losses[:,1], label=r'$4 tan^{-1} 1$')
-    plt.plot(losses[:,0], losses[:,2], label=r'$\pi_{family}$')
-    plt.legend(loc='best', fontsize='small')
-    plt.show()
+        plt.xlabel('resolution bits')
+        plt.ylabel('error bits')
+        plt.grid(True)
+        lab_approx, lab_family = cls.getLabels()
+        plt.plot(losses[:,0], losses[:,1], label=lab_approx)
+        plt.plot(losses[:,0], losses[:,2], label=lab_family)
+        plt.legend(loc='best', fontsize='small')
+        plt.show()
+
+
+class PiAccuracyPlot(ConstAccuracyPlot):
+    @classmethod
+    def calcConst(cls, fam):
+        return 4 * FixedPoint.FXnum(1, fam).atan()
+
+    @classmethod
+    def getConst(cls, fam):
+        return fam.pi
+
+    @classmethod
+    def getLabels(cls):
+        return (r'$4 \tan^{-1} 1$', r'$\pi_{family}$')
+
+
+class Log2AccuracyPlot(ConstAccuracyPlot):
+    @classmethod
+    def calcConst(cls, fam):
+        return (2 * FixedPoint.FXnum(3, fam).log()
+                - (FixedPoint.FXnum(9, fam) / 8).log()) / 3
+
+    @classmethod
+    def getConst(cls, fam):
+        return fam.log2
+
+    @classmethod
+    def getLabels(cls):
+        return (r'$(\log9 - \log(9/8))/3$', r'$\log2_{family}$')
 
 
 def main():
@@ -141,7 +186,8 @@ def main():
         ('speed',       speedDemo) ])
     if HAVE_MATPLOTLIB:
         demos['piplot'] = piPlot
-        demos['piaccplot'] = piAccuracyPlot
+        demos['piaccplot'] = PiAccuracyPlot.draw
+        demos['log2accplot'] = Log2AccuracyPlot.draw
 
     parser = argparse.ArgumentParser(
                 description='Rudimentary demonstrations of'

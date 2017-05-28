@@ -137,14 +137,13 @@ class FXfamily(object):
         """Natural logarithm of two."""
         if self._log2 is None:
             # Brute-force calculation of log(2) using augmented accuracy
-            #   via log(2) = log(2^19 / 3^12) + 6log(1 + 1/8):
+            #   via log(2) =  12log(3^7 / 2^11) - 7log(3^12 / 2^19)
             augfamily = self.augment()
-            auglog2 = FXnum(2, augfamily)._rawlog()
-            three12 = (9 * 9 * 9) * (9 * 9 * 9)
-            two19 = 1 << 19
-            q0 = FXnum(two19 - three12, augfamily) / FXnum(three12, augfamily)
-            q1 = 1 / FXnum(8, augfamily)
-            auglog2 = q0._rawlog(isDelta=True) + 6 * q1._rawlog(isDelta=True)
+
+            q0 = FXnum((3 ** 7) - (1 << 11), augfamily) >> 11
+            q1 = FXnum((3 ** 12) - (1 << 19), augfamily) >> 19
+            auglog2 = (12 * q0._rawlog(isDelta=True)
+                        - 7 * q1._rawlog(isDelta=True))
             self._log2 = FXnum(auglog2, self)
         return self._log2
 
@@ -152,7 +151,8 @@ class FXfamily(object):
     def pi(self):
         """Ratio of circle's perimeter to its diameter."""
         if self._pi is None:
-            # Brute-force calculation of 8*atan(pi/8) using augmented accuracy:
+            # Brute-force calculation of 8*atan(tan(pi/8)),
+            # using augmented accuracy:
             augfamily = self.augment()
             tan8 = (augfamily.sqrt2 - 1)
             augpi = 8 * tan8._rawarctan()
