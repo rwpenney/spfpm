@@ -137,13 +137,13 @@ class FXfamily(object):
         """Natural logarithm of two."""
         if self._log2 is None:
             # Brute-force calculation of log(2) using augmented accuracy
-            #   via log(2) =  12log(3^7 / 2^11) - 7log(3^12 / 2^19)
+            #   via log(2) = 5log(3^12 / 2^19) - 12log(3^5 / 2^8)
             augfamily = self.augment()
 
-            q0 = FXnum((3 ** 7) - (1 << 11), augfamily) >> 11
-            q1 = FXnum((3 ** 12) - (1 << 19), augfamily) >> 19
-            auglog2 = (12 * q0._rawlog(isDelta=True)
-                        - 7 * q1._rawlog(isDelta=True))
+            q0 = FXnum((3 ** 12) - (1 << 19), augfamily) >> 19
+            q1 = FXnum((3 ** 5) - (1 << 8), augfamily) >> 8
+            auglog2 = (5 * q0._rawlog(isDelta=True)
+                        - 12 * q1._rawlog(isDelta=True))
             self._log2 = FXnum(auglog2, self)
         return self._log2
 
@@ -578,15 +578,29 @@ class FXnum(object):
             arg *= -1
             reflect = True
         if arg <= 0.5:
-            cs2 = 1 - arg * arg
-            asn = (arg / cs2.sqrt()).atan()
+            asn = arg._rawarcsin()
         else:
             # apply 1-cos2t transformation:
-            tn2 = (1 - arg) / (1 + arg)
-            if tn2 < 0: raise FXdomainError
-            asn = self.family.pi / 2 - 2 * (tn2.sqrt()).atan()
+            cs2 = (1 - arg) / 2
+            if cs2 < 0: raise FXdomainError
+            asn = self.family.pi / 2 - 2 * cs2.sqrt()._rawarcsin()
         if reflect: asn *= -1
         return asn
+
+    def _rawarcsin(self):
+        """Brute-force inverse-sine of given number"""
+        asn = FXnum(1, self.family)
+        x2 = self * self
+        term = x2 / 2
+        half = self.family.unity / 2
+        idx = 1
+        while True:
+            delta = term / (2 * idx + 1)
+            asn += delta
+            if delta.scaledval == 0: break
+            idx += 1
+            term *= x2 * (1 - half / idx)
+        return self * asn
 
     def cos(self):
         """Compute cosine of given number (as angle in radians)"""
@@ -607,13 +621,12 @@ class FXnum(object):
             arg *= -1
             reflect = True
         if arg <= 0.5:
-            sn2 = 1 - arg * arg
-            acs = self.family.pi / 2 - (arg / sn2.sqrt()).atan()
+            acs = self.family.pi / 2 - arg._rawarcsin()
         else:
             # apply 1-cos2t transformation:
-            tn2 = (1 - arg) / (1 + arg)
-            if tn2 < 0: raise FXdomainError
-            acs = 2 * (tn2.sqrt()).atan()
+            sn2 = (1 - arg) / 2
+            if sn2 < 0: raise FXdomainError
+            acs = 2 * (sn2.sqrt())._rawarcsin()
         if reflect: acs = self.family.pi - acs
         return acs
 

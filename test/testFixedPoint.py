@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Unit-tests for simple fixed-point Python module
+# Unit-tests for simple Python fixed-point module (spfpm)
 # RW Penney, January 2006
 
 import math, sys, unittest
@@ -447,28 +447,38 @@ class TestTrig(FixedPointTest):
         """atan method agree with math.sin/cos"""
         fam62 = FXfamily(62)
         scale = 0.277
+
+        self.assertEqual(FXnum(0, fam62), 0)
+
         for i in range(-32, 32):
             tan = i * scale
             ang_true = math.atan(tan)
             ang = FXnum(tan, fam62).atan()
             self.assertAlmostEqual(ang_true, ang)
+            self.assertAlmostEqual(float(ang.tan()), tan)
 
     def testArcSinCos(self):
         """asin/acos methods should be inverses of sin/cos"""
         fam62 = FXfamily(62)
+
         trig = FXnum(0, fam62)
         self.assertEqual(trig, trig.asin())
         self.assertEqual(trig, FXnum(1,fam62).acos())
+
         steps = 20
         for i in range(0, steps + 1):
             for s in [-1.0, 1.0]:
                 trig = FXnum((i * s) / steps, fam62)
+
                 isn = trig.asin()
                 self.assertTrue(abs(isn) <= fam62.pi / 2)
                 self.assertAlmostEqual(float(trig), float(isn.sin()))
+                self.assertAlmostEqual(float(isn), math.asin(float(trig)))
+
                 ics = trig.acos()
                 self.assertTrue(0 <= ics and ics <= fam62.pi)
                 self.assertAlmostEqual(float(trig), float(ics.cos()))
+                self.assertAlmostEqual(float(ics), math.acos(float(trig)))
 
 
 if __name__ == "__main__":

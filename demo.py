@@ -97,7 +97,7 @@ def piPlot():
     truepoints = numpy.array([[b_min, pi_true], [b_max, pi_true]])
 
     plt.xlabel('bits')
-    plt.ylabel(r'$4 tan^{-1}1$')
+    plt.ylabel(r'$4 \tan^{-1} 1$')
     plt.xlim([b_min, b_max])
     plt.ylim([3.13, 3.16])
     plt.grid(True)
@@ -154,7 +154,7 @@ class ConstAccuracyPlot(object):
 class PiAccuracyPlot(ConstAccuracyPlot):
     @classmethod
     def calcConst(cls, fam):
-        return 4 * FixedPoint.FXnum(1, fam).atan()
+        return 6 * FixedPoint.FXnum(0.5, fam).asin()
 
     @classmethod
     def getConst(cls, fam):
@@ -162,7 +162,7 @@ class PiAccuracyPlot(ConstAccuracyPlot):
 
     @classmethod
     def getLabels(cls):
-        return (r'$4 \tan^{-1} 1$', r'$\pi_{family}$')
+        return (r'$6 \sin^{-1} \frac{1}{2}$', r'$\pi_{family}$')
 
 
 class Log2AccuracyPlot(ConstAccuracyPlot):

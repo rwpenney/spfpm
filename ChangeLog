@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+29May17	- Neatened asin() and acos() methods, avoiding use of atan().
+
 28May17	- Improved efficiency of computation of log(2)
 	Converted README.txt into markdown
 
