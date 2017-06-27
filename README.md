@@ -4,7 +4,7 @@ spfpm is a pure-Python toolkit for performing binary fixed-point arithmetic,
 including trigonometric and exponential functions.
 
 The package provides:
-* Representations of numbers with a fixed number of fractional bits
+* Representations of values with a fixed number of fractional bits
 * Optional constraints on the number of whole-number bits
 * Interconversion between native Python types and fixed-point objects
 * Arithmetic operations (addition, subtraction, multiplication, division)

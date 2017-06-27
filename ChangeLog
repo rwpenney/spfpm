@@ -1,5 +1,8 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+24Jun17	- Improved convergence of asin() series.
+	Replaced atan() computation of pi with asin().
+
 29May17	- Neatened asin() and acos() methods, avoiding use of atan().
 
 28May17	- Improved efficiency of computation of log(2)

@@ -151,11 +151,14 @@ class FXfamily(object):
     def pi(self):
         """Ratio of circle's perimeter to its diameter."""
         if self._pi is None:
-            # Brute-force calculation of 8*atan(tan(pi/8)),
-            # using augmented accuracy:
+            # Brute-force calculation using augmented accuracy
+            # based on sin(pi/12) = sqrt(1/2-sqrt(3)/4):
             augfamily = self.augment()
-            tan8 = (augfamily.sqrt2 - 1)
-            augpi = 8 * tan8._rawarctan()
+
+            rt3 = FXnum(3, augfamily).sqrt()
+            sin12 = ((1 - rt3 / 2) / 2).sqrt()
+            augpi = 12 * sin12._rawarcsin()
+
             self._pi = FXnum(augpi, self)
         return self._pi
 
@@ -487,19 +490,19 @@ class FXnum(object):
         return result
 
     def sqrt(self):
-        """Compute square-root of given number"""
+        """Compute square-root of given number."""
         if self.scaledval < 0:
             raise FXdomainError
         elif self.scaledval == 0:
             return self
-        # calculate crude initial approximation:
+        # Calculate crude initial approximation:
         rt = FXnum(family=self.family,
                    scaled_value=(1 << (self.family.fraction_bits // 2)))
         val = self.scaledval
         while val > 0:
             val >>= 2
             rt.scaledval <<= 1
-        # refine approximation by Newton iteration:
+        # Refine approximation by Newton iteration:
         while True:
             delta = (rt - self / rt) >> 1
             rt -= delta
@@ -588,18 +591,25 @@ class FXnum(object):
         return asn
 
     def _rawarcsin(self):
-        """Brute-force inverse-sine of given number"""
+        """Brute-force inverse-sine of given number.
+
+        This requires roughly as many integer bits as fractional bits,
+        in order to accommodate (2n!)/(n!n!).
+        """
         asn = FXnum(1, self.family)
         x2 = self * self
-        term = x2 / 2
+        x2n = x2
         half = self.family.unity / 2
+        nCn = 2     # (2n)! / ((n!)^2)
         idx = 1
         while True:
-            delta = term / (2 * idx + 1)
+            delta = x2n * ((FXnum(nCn, self.family) >> (2 * idx))
+                                / (2 * idx + 1))
             asn += delta
             if delta.scaledval == 0: break
             idx += 1
-            term *= x2 * (1 - half / idx)
+            x2n *= x2
+            nCn = (nCn * 2 * (2 * idx - 1)) // idx
         return self * asn
 
     def cos(self):
@@ -706,7 +716,7 @@ class FXnum(object):
         return ang
 
     def _rawarctan(self):
-        """Brute-force inverse-tangent of given number (for |self|<1)"""
+        """Brute-force inverse-tangent of given number (for |self|<1)."""
         atn = 1
         x2 = self * self
         omx2 = 1 - x2
@@ -715,6 +725,7 @@ class FXnum(object):
         term = x2
         idx = 1
         while True:
+            # Combine pair of successive terms with opposite signs:
             delta = term * (4 * idx * omx2 + opx2) / (16 * idx * idx - 1)
             atn -= delta
             term *= x4
