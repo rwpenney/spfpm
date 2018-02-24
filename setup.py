@@ -25,7 +25,7 @@ setup(
         'SPFPM supports basic arithmetic operations as well as a range ' + \
         'of mathematical functions including sqrt, exp, sin, cos, atan etc.',
     name = 'spfpm',
-    url = 'http://www.sourceforge.net/projects/pyfixedpoint',
+    url = 'https://github.com/rwpenney/spfpm',
     version = SPFPM_VERSION,
     py_modules = [ 'FixedPoint' ],
     classifiers = [ 'Programming Language :: Python :: 3',

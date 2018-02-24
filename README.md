@@ -84,4 +84,4 @@ at 100-bit precision differ from the true values of these constants.
 
 All files are released under
 the [Python PSF License](https://docs.python.org/3/license.html)
-and are Copyright 2006-2017 RW Penney.
+and are Copyright 2006-2018 RW Penney.
