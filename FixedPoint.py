@@ -80,7 +80,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.3'
+SPFPM_VERSION = '1.3.1'
 
 
 class FXfamily(object):
@@ -207,6 +207,10 @@ class FXfamily(object):
                     or self.integer_bits != other.integer_bits)
         except AttributeError:
             return true
+
+    def __call__(self, val):
+        """Create a fixed-point number within this family."""
+        return FXnum(val, family=self)
 
     def convert(self, other, other_val):
         """Convert number from different number of fraction-bits"""

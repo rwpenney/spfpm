@@ -18,6 +18,13 @@ class FixedPointTest(unittest.TestCase):
 
 
 class TestFamilies(FixedPointTest):
+    def testNumCreate(self):
+        """Check number creation directly from FXfamily."""
+        n0 = FXfamily(11)(3.125)
+        self.assertEqual(float(n0), 3.125)
+        self.assertIsInstance(n0, FXnum)
+        self.assertEqual(n0.family.resolution, 11)
+
     def testFamEquality(self):
         """Check tests on equivalence of FXfamilies"""
         idxlist = [8, 16, 24, 33, 59]
@@ -145,8 +152,8 @@ class TestNumConvert(FixedPointTest):
         fam17 = FXfamily(17)
         for i in range(-32, 32):
             x = i * 0.819
-            fx = FXnum(x, fam17)
-            zero = FXnum(0, fam17)
+            fx = fam17(x)
+            zero = fam17(0)
             try:
                 self.assertEqual(zero, fx + (-fx))
                 self.assertEqual(zero, -fx + fx)
@@ -359,7 +366,7 @@ class TestPowers(FixedPointTest):
         scale = 0.94
         for i in range(-40, 40):
             x = i * scale
-            fx = FXnum(x, fam62)
+            fx = fam62(x)
             try:
                 rt = fx.sqrt()
             except FXdomainError:
@@ -436,7 +443,7 @@ class TestTrig(FixedPointTest):
             x = i * scale
             sin_true = math.sin(x)
             cos_true = math.cos(x)
-            fang = FXnum(x, fam62)
+            fang = fam62(x)
             (sin, cos) = fang.sincos()
             self.assertAlmostEqual(sin_true, sin)
             self.assertAlmostEqual(cos_true, cos)

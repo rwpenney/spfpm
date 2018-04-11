@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+11Apr18	- Added shortcut method to FXfamily for creating FXnum instances
+
 24Feb18	- *** spfpm-1.3 released
 
 24Jun17	- Improved convergence of asin() series.

@@ -23,7 +23,7 @@ def basicDemo():
         val = 2
 
         print('=== {0} bits ==='.format(resolution))
-        rt = FixedPoint.FXnum(val, family).sqrt()
+        rt = family(val).sqrt()
         print('sqrt(' + str(val) + ')~ ' + str(rt))
         print('sqrt(' + str(val) + ')^2 ~ ' + str(rt * rt))
         print('exp(1) ~ ' + str(family.exp1))
@@ -37,7 +37,7 @@ def overflowDemo():
     print('=== {0}-bit fractional part ==='.format(res))
     for intsize in [4, 8, 16, 32]:
         family = FixedPoint.FXfamily(res, intsize)
-        x = FixedPoint.FXnum(0.0, family)
+        x = family(0.0)
         step = 0.1
         while True:
             try:
@@ -57,9 +57,9 @@ def speedDemo():
                         (64, 10000), (128, 10000),
                         (256, 10000), (512, 10000) ]:
         fam = FixedPoint.FXfamily(res)
-        x = FixedPoint.FXnum(0.5, fam)
-        lmb = FixedPoint.FXnum(3.6, fam)
-        one = FixedPoint.FXnum(1.0, fam)
+        x = fam(0.5)
+        lmb = fam(3.6)
+        one = fam(1.0)
         t0 = time.clock()
         for i in range(count):
             # use logistic-map in chaotic region:
@@ -74,7 +74,7 @@ def speedDemo():
                         (24, 10000), (48, 10000), (128, 10000),
                         (512, 10000) ]:
         fam = FixedPoint.FXfamily(res, 4)
-        x = FixedPoint.FXnum(2, fam)
+        x = fam(2)
         t0 = time.clock()
         for i in range(count):
             y = x.sqrt()
