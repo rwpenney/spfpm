@@ -52,13 +52,14 @@ Creating numbers with a specific precision requires use of the FXfamily class:
 ```python
 fam100 = FXfamily(100)
 z = FXnum(1, fam100)
+z2 = fam100(2)
 ```
 
 One can then apply various computations such as:
 
 ```python
 print(z.atan() * 4)
-print((2 * z).sqrt())
+print(z2.sqrt())
 ```
 
 The FXfamily class also provides access to pre-computed constants

@@ -202,6 +202,24 @@ class TestNumPrint(FixedPointTest):
                 fpb = FXnum(eval(repr(fp0)), family=fp0.family)
                 self.assertEqual(fp0, fpb)
 
+    def testTwosComplement(self):
+        """Check conversion to twos-complement for binary/hex printing"""
+        fam = FXfamily(3)
+        self.assertEqual(fam(0.25)._toTwosComplement(), (0x02, 1, 3))
+        self.assertEqual(fam(0.125)._toTwosComplement(1), (0x01, 1, 3))
+        self.assertEqual(fam(0.125)._toTwosComplement(4), (0x02, 1, 1))
+
+        fam = FXfamily(4)
+        self.assertEqual(fam(15.0625)._toTwosComplement(4), (0xf1, 1, 1))
+        self.assertEqual(fam(-7.25)._toTwosComplement(4), (0x8c, 1, 1))
+        self.assertEqual(fam(-25.0)._toTwosComplement(4), (0x0e70, 2, 1))
+        self.assertEqual(fam(-128.0)._toTwosComplement(4), (0x0800, 2, 1))
+
+        fam = FXfamily(5, 3)
+        self.assertEqual(fam(3.625)._toTwosComplement(), (0x74, 3, 5))
+        self.assertEqual(fam(-3.5)._toTwosComplement(), (0x90, 3, 5))
+
+
 
 class TestArithmetic(FixedPointTest):
     def testAddition(self):

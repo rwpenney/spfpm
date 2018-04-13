@@ -80,7 +80,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.3.1'
+SPFPM_VERSION = '1.3.2'
 
 
 class FXfamily(object):
@@ -279,7 +279,7 @@ class FXnum(object):
         self.family = family
         converter = family.convert
         try:
-            # assume that val is similar to FXnum:
+            # Assume that val is similar to FXnum:
             self.scaledval = converter(val.family, val.scaledval)
         except AttributeError:
             self.scaledval = kwargs.get('scaled_value',
@@ -303,7 +303,7 @@ class FXnum(object):
         return 'FXnum(family={}, scaled_value={})'.format(self.family,
                                                           self.scaledval)
 
-    # conversion operations:
+    # Conversion operations:
     def __int__(self):
         """Cast to integer"""
         if self.scaledval >= 0:
@@ -342,7 +342,7 @@ class FXnum(object):
         """Identity operation"""
         return self
 
-    # arithmetic comparison tests:
+    # Arithmetic comparison tests:
     def __eq__(self, other):
         """Equality test"""
         other = self._CastOrFail_(other)
@@ -381,7 +381,7 @@ class FXnum(object):
         """Test for non-zero"""
         return (self.scaledval != 0)
 
-    # arithmetic combinations:
+    # Arithmetic combinations:
     def __add__(self, other):
         """Add another number"""
         other = self._CastOrFail_(other)
@@ -432,8 +432,12 @@ class FXnum(object):
         return FXnum(other, self.family) / self
     __rdiv__ = __rtruediv__
 
-    # printing/converstion routines:
+    # Printing/converstion routines:
     def __str__(self):
+        """Convert number (as decimal) into string"""
+        return self.toDecimalString()
+
+    def toDecimalString(self):
         """Convert number (as decimal) into string"""
         # despite rebinding costs, list+join idiom appears slower here
         # than string concatenation building 'rep' from successive digits
@@ -456,7 +460,31 @@ class FXnum(object):
                 idx += 1
         return rep
 
-    # mathematical functions:
+    def _toTwosComplement(self, logBase=1):
+        """Convert binary representation to twos-complement for printing"""
+        fracDigits = (self.family.resolution + logBase - 1) // logBase
+        bitPattern = self.scaledval
+
+        if self.family.integer_bits is not None:
+            intDigits = (self.family.integer_bits + logBase - 1) // logBase
+        else:
+            intDigits = 1
+            intPart = self.scaledval >> self.family.resolution
+            if intPart >= 0:
+                while intPart >= (1 << (intDigits * logBase)):
+                    intDigits += 1
+            else:
+                while (1 << (intDigits * logBase - 1)) + intPart < 0:
+                    intDigits += 1
+
+        if bitPattern < 0:
+            bitPattern += 1 << (intDigits * logBase + self.family.resolution)
+
+        bitPattern <<= (fracDigits * logBase - self.family.resolution)
+
+        return (bitPattern, intDigits, fracDigits)
+
+    # Mathematical functions:
     def __pow__(self, other, modulus=None):
         """Evaluate self ^ other"""
         assert modulus is None
