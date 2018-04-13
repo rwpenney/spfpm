@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+13Apr18	- Added method for printing FXnum as binary/octal/hexadecimal string
+
 11Apr18	- Added shortcut method to FXfamily for creating FXnum instances
 
 24Feb18	- *** spfpm-1.3 released

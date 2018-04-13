@@ -80,7 +80,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.3.2'
+SPFPM_VERSION = '1.3.3'
 
 
 class FXfamily(object):
@@ -439,7 +439,7 @@ class FXnum(object):
 
     def toDecimalString(self):
         """Convert number (as decimal) into string"""
-        # despite rebinding costs, list+join idiom appears slower here
+        # Despite rebinding costs, list+join idiom appears slower here
         # than string concatenation building 'rep' from successive digits
         val = self.scaledval
         rep = ''
@@ -460,8 +460,30 @@ class FXnum(object):
                 idx += 1
         return rep
 
+    def toBinaryString(self, logBase=1):
+        """Convert number into string in base 2/4/8/16"""
+        if logBase > 4 or logBase < 1:
+            raise ValueError('Cannot convert to base greater than 16')
+        (bits, intDigits, fracDigits) = self._toTwosComplement(logBase)
+
+        digits = []
+        mask = (1 << logBase) - 1
+        for dig in range(intDigits+fracDigits):
+            digits.append('{:1x}'.format(bits & mask))
+            bits >>= logBase
+        digits = ''.join(reversed(digits))
+
+        return digits[:-fracDigits] + '.' + digits[-fracDigits:]
+
     def _toTwosComplement(self, logBase=1):
-        """Convert binary representation to twos-complement for printing"""
+        """Convert binary representation to twos-complement for printing.
+
+        This will convert negative numbers into their twos-complement form,
+        and automatically guess the number of digits required to represent
+        the integer part of the invoking number. The returned bit-pattern
+        is aligned so that it has a whole number of digits (in base 1<<logBase)
+        both before and after the binary/octal/hexadecimal-point.
+        """
         fracDigits = (self.family.resolution + logBase - 1) // logBase
         bitPattern = self.scaledval
 

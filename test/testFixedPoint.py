@@ -219,6 +219,38 @@ class TestNumPrint(FixedPointTest):
         self.assertEqual(fam(3.625)._toTwosComplement(), (0x74, 3, 5))
         self.assertEqual(fam(-3.5)._toTwosComplement(), (0x90, 3, 5))
 
+    def testBinary(self):
+        for res in range(1, 5):
+            fam = FXfamily(res)
+            for scaled in range(1 << (res + 4)):
+                pos = FXnum(family=fam, scaled_value=scaled)
+
+                for sign in ((1, -1) if scaled > 0 else (1,)):
+                    printed = (sign * pos).toBinaryString()
+
+                    if sign > 0:
+                        x = scaled
+                    else:
+                        if scaled < (1 << res):
+                            shift = res + 1
+                        else:
+                            shift = math.ceil(math.log2(scaled)) + 1
+                        x = (1 << shift) - scaled
+                    binstr = bin(x)[2:]
+                    pad = res + 1 - len(binstr)
+                    if pad > 0: binstr = '0' * pad + binstr
+                    binstr = binstr[:-res] + '.' + binstr[-res:]
+                    self.assertEqual(binstr, printed,
+                                     'Binary printing failed for {}, res={}' \
+                                        .format(float(sign * pos), res))
+
+    def testOctal(self):
+        # FIXME - more here
+        self.assertTrue(False)
+
+    def testHex(self):
+        # FIXME - more here
+        self.assertTrue(False)
 
 
 class TestArithmetic(FixedPointTest):
