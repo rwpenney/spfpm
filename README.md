@@ -79,6 +79,18 @@ This produces the following printed values of those constants:
 
 The struck-through digits show where the values computed
 at 100-bit precision differ from the true values of these constants.
+Alternatively, one could print these values in base-16:
+
+```python
+print(FXfamily(400).pi.toBinaryString(logBase=4))
+```
+
+giving a hexadecimal value of Pi as:
+
+* 3.243f6a8885a308d313198a2e03707344a4093822299f31d0082efa98ec4e6c89452821e638d01377be5466cf34e90c6cc0ac
+
+which agrees exactly with
+the [accepted result](http://hexpi.sourceforge.net/).
 
 
 ## Licensing

@@ -220,6 +220,23 @@ class TestNumPrint(FixedPointTest):
         self.assertEqual(fam(-3.5)._toTwosComplement(), (0x90, 3, 5))
 
     def testBinary(self):
+        build = self.binStrBuilder(1)
+
+        self.assertEqual(build(1.125, 3), '1.001')
+        self.assertEqual(build(13.3125, 7), '1101.0101000')
+
+        self.assertEqual(build(-0.125, 3), '1.111')
+        self.assertEqual(build(-1, 3), '1.000')
+        self.assertEqual(build(-1.875, 3), '10.001')
+
+        self.assertEqual(build(-1.0625, 4), '10.1111')
+        self.assertEqual(build(-2, 4), '10.0000')
+        self.assertEqual(build(-2.5, 4), '101.1000')
+
+        self.assertEqual(build(-5.75, 3, 4), '1010.010')
+        self.assertEqual(build(-1.875, 4, 5), '11110.0010')
+
+    def testBinarySeries(self):
         for res in range(1, 5):
             fam = FXfamily(res)
             for scaled in range(1 << (res + 4)):
@@ -244,13 +261,38 @@ class TestNumPrint(FixedPointTest):
                                      'Binary printing failed for {}, res={}' \
                                         .format(float(sign * pos), res))
 
-    def testOctal(self):
-        # FIXME - more here
-        self.assertTrue(False)
+    def testOctalPi(self):
+        # Value from http://turner.faculty.swau.edu/mathematics/materialslibrary/pi/pibases.html:
+        piOctal='3.1103755242102643021514230630505600670163211220111602105147630720020273724616611633104505120207461615'
+        for res in range(3, 300, 9):
+            printed = FXfamily(res+2).pi.toBinaryString(3)[:-1]
+            self.assertEqual(piOctal[:len(printed)], printed,
+                             'Octal printing failed for res={}'.format(res))
 
     def testHex(self):
-        # FIXME - more here
-        self.assertTrue(False)
+        build = self.binStrBuilder(4)
+
+        self.assertEqual(build(19.25, 8), '13.40')
+        self.assertEqual(build(29.875, 9), '1d.e00')
+
+        self.assertEqual(build(-11.125, 5), 'f4.e0')
+        self.assertEqual(build(-127.25, 3), '80.c')
+        self.assertEqual(build(-128.0625, 4), 'f7f.f')
+
+    def testHexPi(self):
+        # Value from https://sourceforge.net/projects/hexpi/:
+        piHex = '3.243f6a8885a308d313198a2e03707344a4093822299f31d0082efa98ec4e6c89452821e638d01377be5466cf34e90c6cc0ac29b7c97c50dd3f84d5b5b54709179216d5d98979fb1bd1310ba698dfb5ac2ffd72dbd01adfb7b8e1afed6a267e96ba7c9045f12c7f9924a19947b3916cf70801f2e2858efc16636920d871574e69a458fea3f4933d7e0d95748f728eb658718bcd588215'
+        self.maxDiff = 900
+        for res in range(32, 1200, 64):
+            printed = FXfamily(res+2).pi.toBinaryString(4)[:-1]
+            self.assertEqual(piHex[:len(printed)], printed,
+                             'Hex printing failed for res={}'.format(res))
+
+    @classmethod
+    def binStrBuilder(cls, logBase):
+        def build(x, r, d=None):
+            return FXnum(x, family=FXfamily(r, d)).toBinaryString(logBase)
+        return build
 
 
 class TestArithmetic(FixedPointTest):

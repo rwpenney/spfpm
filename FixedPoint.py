@@ -80,7 +80,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.3.3'
+SPFPM_VERSION = '1.4'
 
 
 class FXfamily(object):
@@ -225,6 +225,7 @@ class FXfamily(object):
                 new_val |= ((1 << (bit_inc -1)) - 1)
             return new_val
         else:
+            # Safest approach is to truncate bits, rather than rounding:
             return (other_val >> -bit_inc)
 
     def augment(self, opcount=None):
@@ -462,7 +463,7 @@ class FXnum(object):
 
     def toBinaryString(self, logBase=1):
         """Convert number into string in base 2/4/8/16"""
-        if logBase > 4 or logBase < 1:
+        if not isinstance(logBase, int) or logBase > 4 or logBase < 1:
             raise ValueError('Cannot convert to base greater than 16')
         (bits, intDigits, fracDigits) = self._toTwosComplement(logBase)
 

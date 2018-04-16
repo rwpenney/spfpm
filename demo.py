@@ -84,6 +84,17 @@ def speedDemo():
                 .format(count, res, Dt, count*1e-3/Dt))
 
 
+def printBaseDemo():
+    res = 60
+    pi = FixedPoint.FXfamily(res).pi
+
+    print('==== Pi at {}-bit resolution ===='.format(res))
+    print('decimal: {}'.format(pi.toDecimalString()))
+    print('binary: {}'.format(pi.toBinaryString()))
+    print('octal: {}'.format(pi.toBinaryString(3)))
+    print('hex: {}'.format(pi.toBinaryString(4)))
+
+
 def piPlot():
     """Plot graph of approximations to Pi"""
 
@@ -184,7 +195,8 @@ def main():
     demos = OrderedDict([
         ('basic',       basicDemo),
         ('overflow',    overflowDemo),
-        ('speed',       speedDemo) ])
+        ('speed',       speedDemo),
+        ('speed',       printBaseDemo) ])
     if HAVE_MATPLOTLIB:
         demos['piplot'] = piPlot
         demos['piaccplot'] = PiAccuracyPlot.draw
