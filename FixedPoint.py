@@ -80,7 +80,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.4'
+SPFPM_VERSION = '1.4.1'
 
 
 class FXfamily(object):
@@ -151,13 +151,23 @@ class FXfamily(object):
     def pi(self):
         """Ratio of circle's perimeter to its diameter."""
         if self._pi is None:
-            # Brute-force calculation using augmented accuracy
-            # based on sin(pi/12) = sqrt(1/2-sqrt(3)/4):
+            # Use Bailey–Borwein–Plouffe representation of Pi,
+            # involving powers of 1/16 and simple rational terms:
             augfamily = self.augment()
 
-            rt3 = FXnum(3, augfamily).sqrt()
-            sin12 = ((1 - rt3 / 2) / 2).sqrt()
-            augpi = 12 * sin12._rawarcsin()
+            augpi = augfamily(0)
+            k4 = 0
+            while True:
+                k8 = k4 * 2
+                term = (4 / augfamily(k8 + 1)
+                        - 2 / augfamily(k8 + 4)
+                        - 1 / augfamily(k8 + 5)
+                        - 1 / augfamily(k8 + 6)) >> k4
+
+                if term.scaledval == 0: break
+
+                augpi += term
+                k4 += 4
 
             self._pi = FXnum(augpi, self)
         return self._pi
@@ -462,7 +472,11 @@ class FXnum(object):
         return rep
 
     def toBinaryString(self, logBase=1):
-        """Convert number into string in base 2/4/8/16"""
+        """Convert number into string in base 2/4/8/16
+
+        The returned string can be in binary (logBase=1),
+        octal (logBase=3) or hexadecimal (logBase=4).
+        """
         if not isinstance(logBase, int) or logBase > 4 or logBase < 1:
             raise ValueError('Cannot convert to base greater than 16')
         (bits, intDigits, fracDigits) = self._toTwosComplement(logBase)

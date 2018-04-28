@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+28Apr18	- Replaced asin() formula for pi with Bailey-Borwein-Plouffe series
+
 16Apr18	- *** spfpm-1.4 released
 
 13Apr18	- Added method for printing FXnum as binary/octal/hexadecimal string
