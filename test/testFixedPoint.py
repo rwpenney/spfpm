@@ -188,9 +188,19 @@ class TestNumPrint(FixedPointTest):
         for i in range(1, 10):
             v = 2 ** i
             for x in [v, -v, 1.0/v, -1.0/v]:
-                fpa = "%.8g" % x
-                fpx = str(FXnum(x))
-                self.assertEqual(fpa, fpx)
+                plainstr = "%.8g" % x
+                fpx = FXnum(x)
+                self.assertEqual('{:.8g}'.format(x), str(fpx))
+                self.assertEqual(str(fpx), fpx.toDecimalString())
+
+    def testSmallDecimals(self):
+        def build(x, bits, precision=None):
+            return FXnum(x, FXfamily(bits)).toDecimalString(precision)
+
+        self.assertEqual(build(0.5, 1), '0.5')
+        self.assertEqual(build(0.25, 2, 2), '0.25')
+        self.assertEqual(build(0.125, 3, 2), '0.12')
+        self.assertEqual(build(0.125, 4), '0.12')
 
     def testRepresentation(self):
         """Check repr() functionality"""

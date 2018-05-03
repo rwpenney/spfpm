@@ -28,16 +28,16 @@ but solely through an explicit cast.
 
 >>> x = FXnum(2.1)                  # default FXfamily, with 64-bits
 >>> print(x)
-2.100000000000000088817
+2.10000000000000008881
 >>> x = FXnum(21) / 10              # fractional error ~1/2^64 or ~5e-20
 >>> print(x)
-2.099999999999999999967
+2.09999999999999999996
 >>> rx = x.sqrt()                   # rx created in same family as x
 >>> print(rx)
-1.449137674618943857354
+1.44913767461894385735
 >>> v = x + 2 * rx
 >>> print(v)
-4.998275349237887714675
+4.99827534923788771467
 
 >>> y = FXnum(3.2, FXfamily(12))    # lower-precision 12-bit number
 >>> ly = y.log()                    # ly created in same family as y
@@ -52,7 +52,7 @@ but solely through an explicit cast.
 >>> # a = x + y                     # throws exception - different families
 >>> a = x + FXnum(y, _defaultFamily)
 >>> print(a)
-5.300073242187499999967
+5.30007324218749999996
 >>> b = rx + x                      # ok - same families
 >>> # c = rx + ly                   # throws exception - different families
 >>> d = ly + y                      # ok - same families
@@ -66,7 +66,8 @@ but solely through an explicit cast.
 
 >>> fam = FXfamily(200)
 >>> print(fam.pi)
-3.141592653589793238462643383279502884197169399375105820974944478108
+3.1415926535897932384626433832795028841971693993751058209749444
+>>> #   Accurate to 60 decimal places                         ^- first error
 
 Note:
     Be careful not to assume that a large number of fractional bits within
@@ -80,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.4.1'
+SPFPM_VERSION = '1.4.2'
 
 
 class FXfamily(object):
@@ -448,26 +449,31 @@ class FXnum(object):
         """Convert number (as decimal) into string"""
         return self.toDecimalString()
 
-    def toDecimalString(self):
+    def toDecimalString(self, precision=None):
         """Convert number (as decimal) into string"""
         # Despite rebinding costs, list+join idiom appears slower here
         # than string concatenation building 'rep' from successive digits
+        famScale = self.family.scale
+        if precision is None or not isinstance(precision, int):
+            precision = (3 + self.family.fraction_bits) // 3.3
+            # Each fractional bit adds about log_10(2) decimal digits
+
         val = self.scaledval
         rep = ''
         if self.scaledval < 0:
             rep = '-'
             val *= -1
-        whole = val // self.family.scale
-        frac = val - self.family.scale * whole
+        whole = val // famScale
+        frac = val - whole * famScale
         rep += str(whole)
-        if frac != 0:
+        if frac != 0 and precision > 0:
             rep += '.'
             idx = 0
-            while idx < (self.family.fraction_bits // 3) and frac != 0:
+            while idx < precision and frac != 0:
                 frac *= 10
-                q = frac // self.family.scale
+                q = frac // famScale
                 rep += str(q)
-                frac -= q * self.family.scale
+                frac -= q * famScale
                 idx += 1
         return rep
 

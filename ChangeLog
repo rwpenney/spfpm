@@ -1,5 +1,8 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+03May18	- Added 'precision' option to FXnum.toDecimalString() method
+	Improved estimation of number of digits in decimal representation
+
 28Apr18	- Replaced asin() formula for pi with Bailey-Borwein-Plouffe series
 
 16Apr18	- *** spfpm-1.4 released
