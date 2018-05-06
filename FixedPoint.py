@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.4.2'
+SPFPM_VERSION = '1.4.3'
 
 
 class FXfamily(object):
@@ -449,13 +449,18 @@ class FXnum(object):
         """Convert number (as decimal) into string"""
         return self.toDecimalString()
 
-    def toDecimalString(self, precision=None):
-        """Convert number (as decimal) into string"""
+    def toDecimalString(self, precision=None, round10=False):
+        """Convert number (as decimal) into string
+
+        precision -     The maximum number of digits after the decimal point.
+        round10 -       Round last decimal digit of fractional part,
+                        by adding 0.5/10^precision.
+        """
         # Despite rebinding costs, list+join idiom appears slower here
         # than string concatenation building 'rep' from successive digits
         famScale = self.family.scale
         if precision is None or not isinstance(precision, int):
-            precision = (3 + self.family.fraction_bits) // 3.3
+            precision = int((3 + self.family.fraction_bits) / 3.32)
             # Each fractional bit adds about log_10(2) decimal digits
 
         val = self.scaledval
@@ -463,9 +468,16 @@ class FXnum(object):
         if self.scaledval < 0:
             rep = '-'
             val *= -1
+
+        if round10:
+            # Round (decimal) fractional part by adding half of last-digit:
+            decimalScale = 10 ** precision
+            val = (val * decimalScale + famScale // 2) // decimalScale
+
         whole = val // famScale
         frac = val - whole * famScale
         rep += str(whole)
+
         if frac != 0 and precision > 0:
             rep += '.'
             idx = 0

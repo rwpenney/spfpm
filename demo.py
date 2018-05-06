@@ -196,7 +196,7 @@ def main():
         ('basic',       basicDemo),
         ('overflow',    overflowDemo),
         ('speed',       speedDemo),
-        ('speed',       printBaseDemo) ])
+        ('printing',    printBaseDemo) ])
     if HAVE_MATPLOTLIB:
         demos['piplot'] = piPlot
         demos['piaccplot'] = PiAccuracyPlot.draw

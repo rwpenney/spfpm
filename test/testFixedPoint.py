@@ -202,6 +202,25 @@ class TestNumPrint(FixedPointTest):
         self.assertEqual(build(0.125, 3, 2), '0.12')
         self.assertEqual(build(0.125, 4), '0.12')
 
+    def testDecimalRound(self):
+        third = FXnum(1, FXfamily(200)) / 3
+        x23 = 2 * third
+
+        self.assertEqual(third.toDecimalString(precision=5), '0.33333')
+        self.assertEqual(third.toDecimalString(precision=8, round10=True),
+                         '0.33333333')
+
+        self.assertEqual(x23.toDecimalString(precision=4), '0.6666')
+        self.assertEqual(x23.toDecimalString(precision=7, round10=True),
+                         '0.6666667')
+
+        self.assertEqual(x23.toDecimalString()[:42],
+                         '0.' + '6'*40)
+        self.assertEqual(x23.toDecimalString(precision=50),
+                         '0.' + '6'*50)
+        self.assertEqual(x23.toDecimalString(precision=50, round10=True),
+                         '0.' + '6' * 49 + '7')
+
     def testRepresentation(self):
         """Check repr() functionality"""
         for i in range(1, 30):

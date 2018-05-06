@@ -73,9 +73,9 @@ print('sqrt2 = ', fam100.sqrt2)
 
 This produces the following printed values of those constants:
 
-* 3.141592653589793238462643383279 ~~333~~
-* 0.69314718055994530941723212145 ~~7981~~
-* 1.414213562373095048801688724209 ~~176~~
+* 3.141592653589793238462643383279 ~~3~~
+* 0.69314718055994530941723212145 ~~79~~
+* 1.414213562373095048801688724209 ~~1~~
 
 The struck-through digits show where the values computed
 at 100-bit precision differ from the true values of these constants.
