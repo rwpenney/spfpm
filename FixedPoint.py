@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.4.3'
+SPFPM_VERSION = '1.4.4'
 
 
 class FXfamily(object):
@@ -489,15 +489,29 @@ class FXnum(object):
                 idx += 1
         return rep
 
-    def toBinaryString(self, logBase=1):
+    def toBinaryString(self, logBase=1, twosComp=True):
         """Convert number into string in base 2/4/8/16
 
-        The returned string can be in binary (logBase=1),
-        octal (logBase=3) or hexadecimal (logBase=4).
+        logBase -       log_2 of the number base for printing.
+                        (e.g. 1 for binary, 3 for octal, 4 for hexadecimal).
+                        This must be no greater than 4.
+        twosComp -      Whether to convert negative numbers into
+                        twos-complement form. If this is False,
+                        then negative numbers are simply prefixed
+                        by a minus sign.
+
+        Note that when negative numbers are converted to twos-complement form,
+        this may involve estimating how many bits are needed
+        to contain the integer part if this is not specified by the FXfamily.
         """
         if not isinstance(logBase, int) or logBase > 4 or logBase < 1:
             raise ValueError('Cannot convert to base greater than 16')
-        (bits, intDigits, fracDigits) = self._toTwosComplement(logBase)
+
+        sign, prefix = 1, ''
+        if self.scaledval < 0 and not twosComp:
+            sign, prefix = -1, '-'
+        (bits, intDigits, fracDigits) = \
+                                (sign * self)._toTwosComplement(logBase)
 
         digits = []
         mask = (1 << logBase) - 1
@@ -506,7 +520,7 @@ class FXnum(object):
             bits >>= logBase
         digits = ''.join(reversed(digits))
 
-        return digits[:-fracDigits] + '.' + digits[-fracDigits:]
+        return prefix + digits[:-fracDigits] + '.' + digits[-fracDigits:]
 
     def _toTwosComplement(self, logBase=1):
         """Convert binary representation to twos-complement for printing.

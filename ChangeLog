@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+12May18	- Added signed/twos-complement option to FXnum.toBinaryString() method
+
 03May18	- Added 'precision' option to FXnum.toDecimalString() method
 	Improved estimation of number of digits in decimal representation
 

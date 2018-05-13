@@ -266,6 +266,7 @@ class TestNumPrint(FixedPointTest):
         self.assertEqual(build(-1.875, 4, 5), '11110.0010')
 
     def testBinarySeries(self):
+        """Check binary printing of enumerated signed integers."""
         for res in range(1, 5):
             fam = FXfamily(res)
             for scaled in range(1 << (res + 4)):
@@ -289,6 +290,21 @@ class TestNumPrint(FixedPointTest):
                     self.assertEqual(binstr, printed,
                                      'Binary printing failed for {}, res={}' \
                                         .format(float(sign * pos), res))
+
+    def testNegatives(self):
+        fam = FXfamily(3)
+
+        x2 = FXnum(-0.25, fam)
+        self.assertEqual(x2.toBinaryString(), '1.110')
+        self.assertEqual(x2.toBinaryString(twosComp=False), '-0.010')
+
+        x3 = FXnum(-0.625, fam)
+        self.assertEqual(x3.toBinaryString(logBase=3), '7.3')
+        self.assertEqual(x3.toBinaryString(3, twosComp=False), '-0.5')
+
+        x4 = FXnum(-0.875, fam)
+        self.assertEqual(x4.toBinaryString(4), 'f.2')
+        self.assertEqual(x4.toBinaryString(4, twosComp=False), '-0.e')
 
     def testOctalPi(self):
         # Value from http://turner.faculty.swau.edu/mathematics/materialslibrary/pi/pibases.html:
