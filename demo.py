@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Demonstration of Simple Python Fixed-Point Module
-# (C)Copyright 2006-2018, RW Penney
+# (C)Copyright 2006-2019, RW Penney
 
 from __future__ import print_function
 import argparse, time

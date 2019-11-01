@@ -25,6 +25,20 @@ class TestFamilies(FixedPointTest):
         self.assertIsInstance(n0, FXnum)
         self.assertEqual(n0.family.resolution, 11)
 
+    def testNumCreateRounding(self):
+        """Check rounding behaviour on FXnum creation"""
+        fam = FXfamily(3)
+        self.assertEqual(FXnum(0.375, fam).scaledval, 3)
+        self.assertEqual(FXnum(0.437, fam).scaledval, 3)
+        self.assertEqual(FXnum(0.438, fam).scaledval, 4)
+        self.assertEqual(FXnum(0.46, fam).scaledval, 4)
+
+        fam = FXfamily(4)
+        self.assertEqual(FXnum(-0.75, fam).scaledval, -12)
+        self.assertEqual(FXnum(-0.78124, fam).scaledval, -12)
+        self.assertEqual(FXnum(-0.78126, fam).scaledval, -13)
+        self.assertEqual(FXnum(-0.8125, fam).scaledval, -13)
+
     def testFamEquality(self):
         """Check tests on equivalence of FXfamilies"""
         idxlist = [8, 16, 24, 33, 59]
