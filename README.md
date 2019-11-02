@@ -21,8 +21,8 @@ of hundreds of thousands of arithmetic operations per second,
 i.e. over 100 kilo-FLOPS, even for a few hundred bits of resolution.
 
 Development currently targets [Python](https://www.python.org)
-versions 3.2 and later, although the library should also
-work with python-2.7.
+versions 3.3 and later, although the library should also
+be usable with python-2.7.
 The latest version of spfpm can be found
 on [GitHub](https://github.com/rwpenney/spfpm),
 with earlier versions also available
@@ -47,7 +47,8 @@ y = FXnum(3.1415)
 print(x - y)
 ```
 
-Creating numbers with a specific precision requires use of the FXfamily class:
+Creating numbers with a specific precision requires use
+of the `FXfamily` class:
 
 ```python
 fam100 = FXfamily(100)
@@ -62,7 +63,7 @@ print(z.atan() * 4)
 print(z2.sqrt())
 ```
 
-The FXfamily class also provides access to pre-computed constants
+The `FXfamily` class also provides access to pre-computed constants
 which should be accurate to at least 1/2 of the least significant bit (LSB):
 
 ```python

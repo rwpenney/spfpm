@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.4.5'
+SPFPM_VERSION = '1.4.6'
 
 
 class FXfamily(object):
@@ -152,7 +152,7 @@ class FXfamily(object):
     def pi(self):
         """Ratio of circle's perimeter to its diameter."""
         if self._pi is None:
-            # Use Bailey–Borwein–Plouffe representation of Pi,
+            # Use Bailey-Borwein-Plouffe representation of Pi,
             # involving powers of 1/16 and simple rational terms:
             augfamily = self.augment()
 
@@ -295,7 +295,8 @@ class FXnum(object):
             self.scaledval = converter(val.family, val.scaledval)
         except AttributeError:
             self.scaledval = kwargs.get('scaled_value',
-                                        round(val * family.scale))
+                                        int(round(val * family.scale)))
+            # 'int' casting improves compatibility with Python-2.7
         self.family.validate(self.scaledval)
 
     @classmethod

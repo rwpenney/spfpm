@@ -60,11 +60,11 @@ def speedDemo():
         x = fam(0.5)
         lmb = fam(3.6)
         one = fam(1.0)
-        t0 = time.clock()
+        t0 = time.perf_counter()
         for i in range(count):
             # use logistic-map in chaotic region:
             x = lmb * x * (one - x)
-        t1 = time.clock()
+        t1 = time.perf_counter()
         ops = count * 3
         Dt = t1 - t0
         print('{0} {1}-bit arithmetic operations in {2:.2f}s ~ {3:.2g} FLOPS' \
@@ -75,10 +75,10 @@ def speedDemo():
                         (512, 10000) ]:
         fam = FixedPoint.FXfamily(res, 4)
         x = fam(2)
-        t0 = time.clock()
+        t0 = time.perf_counter()
         for i in range(count):
             y = x.sqrt()
-        t1 = time.clock()
+        t1 = time.perf_counter()
         Dt = (t1 - t0)
         print('{} {}-bit square-roots in {:.3g}s ~ {:.3g}/ms' \
                 .format(count, res, Dt, count*1e-3/Dt))
