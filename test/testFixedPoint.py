@@ -320,6 +320,15 @@ class TestNumPrint(FixedPointTest):
         self.assertEqual(x4.toBinaryString(4), 'f.2')
         self.assertEqual(x4.toBinaryString(4, twosComp=False), '-0.e')
 
+    def testMonoInt(self):
+        """Check printing of numbers with single non-fractional bit"""
+        fam = FXfamily(4, 1)
+
+        self.assertEqual(fam(-0.75).toBinaryString(), '1.0100')
+        self.assertEqual(fam(-0.25).toBinaryString(), '1.1100')
+        self.assertEqual(fam(0.5).toBinaryString(), '0.1000')
+        self.assertEqual(fam(0.825).toBinaryString(), '0.1101')
+
     def testOctalPi(self):
         # Value from http://turner.faculty.swau.edu/mathematics/materialslibrary/pi/pibases.html:
         piOctal='3.1103755242102643021514230630505600670163211220111602105147630720020273724616611633104505120207461615'

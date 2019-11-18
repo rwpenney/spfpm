@@ -508,11 +508,10 @@ class FXnum(object):
         if not isinstance(logBase, int) or logBase > 4 or logBase < 1:
             raise ValueError('Cannot convert to base greater than 16')
 
-        sign, prefix = 1, ''
+        absSelf, prefix = self, ''
         if self.scaledval < 0 and not twosComp:
-            sign, prefix = -1, '-'
-        (bits, intDigits, fracDigits) = \
-                                (sign * self)._toTwosComplement(logBase)
+            absSelf, prefix = -self, '-'
+        (bits, intDigits, fracDigits) = absSelf._toTwosComplement(logBase)
 
         digits = []
         mask = (1 << logBase) - 1
