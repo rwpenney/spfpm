@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # Simple Python Fixed-Point Module (SPFPM)
-# (C)Copyright 2006-2019, RW Penney
+# (C)Copyright 2006-2020, RW Penney
 
 
-# This file is (C)Copyright 2006-2019, RW Penney
+# This file is (C)Copyright 2006-2020, RW Penney
 # and is released under the Python-2.4.2 license
 # (see http://www.python.org/psf/license),
 # it therefore comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.4.6'
+SPFPM_VERSION = '1.4.7'
 
 
 class FXfamily(object):
@@ -558,9 +558,13 @@ class FXnum(object):
         """Evaluate self ^ other"""
         assert modulus is None
         if self == 0:
-            return self.family.unity
+            if other > 0:
+                return self.family.zero
+            else:
+                raise FXdomainError
+
         ipwr = int(other)
-        rmdr = (other -ipwr)
+        rmdr = (other - ipwr)
         if rmdr == 0:
             frac = self.family.unity
         else:

@@ -98,4 +98,4 @@ the [accepted result](http://hexpi.sourceforge.net/).
 
 All files are released under
 the [Python PSF License](https://docs.python.org/3/license.html)
-and are Copyright 2006-2019 RW Penney.
+and are Copyright 2006-2020 RW Penney.

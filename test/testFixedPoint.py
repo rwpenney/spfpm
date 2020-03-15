@@ -545,14 +545,31 @@ class TestPowers(FixedPointTest):
         for i in range(1, 32):
             x = i * scale
 
-            pwr = FXnum(0, fam62) ** x
-            self.assertEqual(FXnum(1, fam62), pwr)
-
             for j in range(-16, 16):
                 y = j * scale2
                 pwr_true = math.pow(x, y)
                 pwr = FXnum(x, fam62) ** y
                 self.assertAlmostEqual(pwr_true, pwr)
+
+    def testPowSpecials(self):
+        """Check raising of special values to powers."""
+        fam30 = FXfamily(30)
+
+        for i in range(1, 30):
+            # Check x^0 == 1
+            self.assertEqual(FXnum(i * 0.2, fam30) ** 0, fam30.unity)
+
+            # Check 0^n == 0
+            self.assertEqual(fam30.zero ** i, fam30.zero)
+
+            # Check 0^x == 0
+            self.assertEqual(fam30.zero ** (i * 0.27), fam30.zero)
+
+            # Check 0^-x
+            with self.assertRaises(FXdomainError):
+                fam30.zero ** (1 - i)
+            with self.assertRaises(FXdomainError):
+                fam30.zero ** -(i * 0.23)
 
 
 class TestExpLog(FixedPointTest):
