@@ -13,7 +13,8 @@ The package provides:
 * Methods for computing trigonometric functions and their inverses
 * Computation of various mathematical constants, such as pi and log(2),
   to maximal precision for the chosen fixed-point resolution
-* Printing fixed-point numbers as decimal numbers
+* Printing fixed-point numbers as decimal numbers,
+  or as binary/octal/hexadecimal representations.
 * Support for numbers with thousands of bits of resolution
 
 On a modern desktop PC, spfpm is typically capable
@@ -21,12 +22,10 @@ of hundreds of thousands of arithmetic operations per second,
 i.e. over 100 kilo-FLOPS, even for a few hundred bits of resolution.
 
 Development currently targets [Python](https://www.python.org)
-versions 3.3 and later, although the library should also
+versions 3.3 and later, although the library may also
 be usable with python-2.7.
 The latest version of spfpm can be found
-on [GitHub](https://github.com/rwpenney/spfpm),
-with earlier versions also available
-on [SourceForge](https://sourceforge.net/projects/pyfixedpoint/).
+on [GitHub](https://github.com/rwpenney/spfpm).
 
 
 ## Examples

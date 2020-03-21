@@ -520,6 +520,32 @@ class TestArithmetic(FixedPointTest):
 
 
 class TestPowers(FixedPointTest):
+    def testCrudeSqrt(self):
+        """Check initialization of sqrt() initializing approximation"""
+        fam24 = FXfamily(24)
+
+        self.assertLess(abs(FXnum(2, fam24)._init_sqrt() - 1.5), 0.55)
+        self.assertEqual(FXnum(4, fam24)._init_sqrt(), 2)
+        self.assertEqual(FXnum(16, fam24)._init_sqrt(), 4)
+        self.assertLess(abs(FXnum(120, fam24)._init_sqrt() - 12.0), 4.05)
+
+        self.assertLess(abs(FXnum(0.5, fam24)._init_sqrt() - 0.7), 0.31)
+        self.assertEqual(FXnum(0.0625, fam24)._init_sqrt(), 0.25)
+        self.assertLess(abs(FXnum(0.002, fam24)._init_sqrt() - 0.046), 0.017)
+        self.assertLess(abs(FXnum(0.0001, fam24)._init_sqrt() - 0.011), 0.005)
+
+        fam23 = FXfamily(23)
+
+        self.assertLess(abs(FXnum(2, fam23)._init_sqrt() - 1.5), 0.55)
+        self.assertEqual(FXnum(4, fam23)._init_sqrt(), 2)
+        self.assertEqual(FXnum(16, fam23)._init_sqrt(), 4)
+        self.assertLess(abs(FXnum(120, fam23)._init_sqrt() - 12.0), 4.05)
+
+        self.assertLess(abs(FXnum(0.5, fam23)._init_sqrt() - 0.7), 0.31)
+        self.assertEqual(FXnum(0.0625, fam23)._init_sqrt(), 0.25)
+        self.assertLess(abs(FXnum(0.002, fam23)._init_sqrt() - 0.046), 0.017)
+        self.assertLess(abs(FXnum(0.0001, fam23)._init_sqrt() - 0.011), 0.005)
+
     def testSqrt(self):
         """sqrt method should find square-roots"""
         fam62 = FXfamily(62)

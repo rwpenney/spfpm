@@ -1,5 +1,11 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+21Mar20	- *** spfpm-1.5 released
+
+21Mar20	- Improved testing of starting approximation within sqrt() method
+
+15Mar20	- Improved handling of domain errors and edge-cases in __pow__() method
+
 01Nov19	- Patched rounding behaviour on FXnum creation from float
 
 12May18	- Added signed/twos-complement option to FXnum.toBinaryString() method

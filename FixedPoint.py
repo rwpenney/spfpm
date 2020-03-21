@@ -26,7 +26,7 @@ and kept separate from a set of 200-bit quantities in the same program.
 Conversion between FXnum objects in different families is supported,
 but solely through an explicit cast.
 
->>> x = FXnum(2.1)                  # default FXfamily, with 64-bits
+>>> x = FXnum(2.1)                  # default FXfamily, with 64 fractional bits
 >>> print(x)
 2.10000000000000008881
 >>> x = FXnum(21) / 10              # fractional error ~1/2^64 or ~5e-20
@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.4.7'
+SPFPM_VERSION = '1.5'
 
 
 class FXfamily(object):
@@ -178,6 +178,7 @@ class FXfamily(object):
         """Square-root of two."""
         if self._sqrt2 is None:
             augfamily = self.augment()
+            # Use initial, very crude, approximation of sqrt(2)~=1.5
             x = FXnum(3, augfamily) >> 1
             while True:
                 # Apply Newton-Raphson iteration to f(x)=2/(x*x)-1:
@@ -600,18 +601,23 @@ class FXnum(object):
             raise FXdomainError
         elif self.scaledval == 0:
             return self
-        # Calculate crude initial approximation:
-        rt = FXnum(family=self.family,
-                   scaled_value=(1 << (self.family.fraction_bits // 2)))
-        val = self.scaledval
-        while val > 0:
-            val >>= 2
-            rt.scaledval <<= 1
-        # Refine approximation by Newton iteration:
+
+        # Refine crude initial approximation by Newton iteration:
+        rt = self._init_sqrt()
         while True:
             delta = (rt - self / rt) >> 1
             rt -= delta
             if delta.scaledval == 0: break
+        return rt
+
+    def _init_sqrt(self):
+        """Compute initial value for iterative computation of sqrt(self)"""
+        rt = FXnum(family=self.family,
+                   scaled_value=(1 << (self.family.fraction_bits // 2)))
+        val = self.scaledval
+        while val > 1:
+            val >>= 2
+            rt.scaledval <<= 1
         return rt
 
     def exp(self):
