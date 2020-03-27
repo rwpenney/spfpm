@@ -176,6 +176,20 @@ class PiAccuracyPlot(ConstAccuracyPlot):
         return (r'$6 \sin^{-1} \frac{1}{2}$', r'$\pi_{family}$')
 
 
+class Exp1AccuracyPlot(ConstAccuracyPlot):
+    @classmethod
+    def calcConst(cls, fam):
+        return 1.0 / (FixedPoint.FXnum(-0.5, fam).exp() ** 2)
+
+    @classmethod
+    def getConst(cls, fam):
+        return fam.exp1
+
+    @classmethod
+    def getLabels(cls):
+        return (r'$(e^{-1/2})^{-2}$', r'$e_{family}$')
+
+
 class Log2AccuracyPlot(ConstAccuracyPlot):
     @classmethod
     def calcConst(cls, fam):
@@ -200,6 +214,7 @@ def main():
     if HAVE_MATPLOTLIB:
         demos['piplot'] = piPlot
         demos['piaccplot'] = PiAccuracyPlot.draw
+        demos['expaccplot'] = Exp1AccuracyPlot.draw
         demos['log2accplot'] = Log2AccuracyPlot.draw
 
     parser = argparse.ArgumentParser(

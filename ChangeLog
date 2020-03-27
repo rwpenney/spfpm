@@ -1,5 +1,8 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+27Mar20	- Neatened calculation of FXfamily.exp1
+	Added demo plot of accuracy of exp(1)
+
 21Mar20	- *** spfpm-1.5 released
 
 21Mar20	- Improved testing of starting approximation within sqrt() method

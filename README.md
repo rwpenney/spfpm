@@ -20,6 +20,11 @@ The package provides:
 On a modern desktop PC, spfpm is typically capable
 of hundreds of thousands of arithmetic operations per second,
 i.e. over 100 kilo-FLOPS, even for a few hundred bits of resolution.
+As a pure-Python library SPFPM offers portability and interactivity,
+but will never compete with the performance of lower-level libraries
+such as [mpmath](http://mpmath.org/),
+[Boost multiprecision](https://www.boost.org/doc/libs/1_72_0/libs/multiprecision/doc/html/index.html)
+or [GMP](https://gmplib.org/) for heavyweight calculations.
 
 Development currently targets [Python](https://www.python.org)
 versions 3.3 and later, although the library may also
@@ -63,7 +68,7 @@ print(z2.sqrt())
 ```
 
 The `FXfamily` class also provides access to pre-computed constants
-which should be accurate to at least 1/2 of the least significant bit (LSB):
+which should be accurate to about 1/2 of the least significant bit (LSB):
 
 ```python
 print('pi = ', fam100.pi)

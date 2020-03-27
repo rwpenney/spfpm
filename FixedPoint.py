@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.5'
+SPFPM_VERSION = '1.5.1'
 
 
 class FXfamily(object):
@@ -125,12 +125,10 @@ class FXfamily(object):
         if self._exp1 is None:
             # Brute-force calculation of exp(1) using augmented accuracy:
             augfamily = self.augment()
-            augexp = FXnum(1, augfamily)._rawexp()
-            arg = 1 / FXnum(4, augfamily)
-            q0 = arg._rawexp()
-            q1 = q0 * q0
-            augexp = q1 * q1
-            self._exp1 = FXnum(augexp, self)
+            exp0_25 = (1 / FXnum(4, augfamily))._rawexp()
+            exp0_5 = exp0_25 * exp0_25
+            exp1 = exp0_5 * exp0_5
+            self._exp1 = FXnum(exp1, self)
         return self._exp1
 
     @property
