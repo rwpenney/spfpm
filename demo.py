@@ -12,14 +12,14 @@ try:
 except ImportError:
     HAVE_MATPLOTLIB = False
 
-import FixedPoint
+from FixedPoint import FXfamily, FXnum, FXoverflowError
 
 
 def basicDemo():
     """Basic demonstration of roots & exponents at various accuracies"""
 
     for resolution in [8, 32, 80, 274]:
-        family = FixedPoint.FXfamily(resolution)
+        family = FXfamily(resolution)
         val = 2
 
         print('=== {0} bits ==='.format(resolution))
@@ -36,13 +36,13 @@ def overflowDemo():
     res = 20
     print('=== {0}-bit fractional part ==='.format(res))
     for intsize in [4, 8, 16, 32]:
-        family = FixedPoint.FXfamily(res, intsize)
+        family = FXfamily(res, intsize)
         x = family(0.0)
         step = 0.1
         while True:
             try:
                 ex = x.exp()
-            except FixedPoint.FXoverflowError:
+            except FXoverflowError:
                 print('{0:2d}-bit integer part: exp(x) overflows near x={1:.3g}'.format(intsize, float(x)))
                 break
             x += step
@@ -56,7 +56,7 @@ def speedDemo():
     for res, count in [ (16, 10000), (32, 10000),
                         (64, 10000), (128, 10000),
                         (256, 10000), (512, 10000) ]:
-        fam = FixedPoint.FXfamily(res)
+        fam = FXfamily(res)
         x = fam(0.5)
         lmb = fam(3.6)
         one = fam(1.0)
@@ -73,7 +73,7 @@ def speedDemo():
     for res, count in [ (4, 10000), (8, 10000), (12, 10000),
                         (24, 10000), (48, 10000), (128, 10000),
                         (512, 10000) ]:
-        fam = FixedPoint.FXfamily(res, 4)
+        fam = FXfamily(res, 4)
         x = fam(2)
         t0 = time.perf_counter()
         for i in range(count):
@@ -86,7 +86,7 @@ def speedDemo():
 
 def printBaseDemo():
     res = 60
-    pi = FixedPoint.FXfamily(res).pi
+    pi = FXfamily(res).pi
 
     print('==== Pi at {}-bit resolution ===='.format(res))
     print('decimal: {}'.format(pi.toDecimalString()))
@@ -99,10 +99,10 @@ def piPlot():
     """Plot graph of approximations to Pi"""
 
     b_min, b_max = 8, 25
-    pi_true = FixedPoint.FXfamily(b_max + 40).pi
+    pi_true = FXfamily(b_max + 40).pi
     pipoints = []
     for res in range(b_min, b_max+1):
-        val = 4 * FixedPoint.FXnum(1, FixedPoint.FXfamily(res)).atan()
+        val = 4 * FXnum(1, FXfamily(res)).atan()
         pipoints.append([res, val])
     pipoints = numpy.array(pipoints)
     truepoints = numpy.array([[b_min, pi_true], [b_max, pi_true]])
@@ -121,88 +121,89 @@ class ConstAccuracyPlot(object):
     """Plot graph of fractional bits wasted due to accumulated roundoff."""
 
     @classmethod
-    def calcConst(cls, fam):
-        return FXnum(1, fam)
-
-    @classmethod
-    def getConst(cls, fam):
-        return fam.unity
+    def calcConsts(cls, fam, famOnly=False):
+        """Use various methods to compute constant to given precision."""
+        return ( fam.unity, FXnum(1, fam) )
 
     @classmethod
     def getLabels(cls):
-        return ('1', '1')
+        """Sequence of labels to use when plotting accuracy graph"""
+        return ( r'1_{family}', '1' )
 
     @staticmethod
     def lostbits(x, x_acc):
+        """Estimate of least-significant bits lost in approximation"""
         fam_acc = x_acc.family
-        eps = (FixedPoint.FXnum(x, fam_acc) - x_acc)
-        return (abs(eps).log() / fam_acc.log2
-                    + x.family.resolution)
+        eps = (FXnum(x, fam_acc) - x_acc)
+        return float(abs(eps).log() / fam_acc.log2
+                        + x.family.resolution)
 
     @classmethod
     def draw(cls):
         losses = []
         for bits in range(4, 500, 4):
-            fam_acc = FixedPoint.FXfamily(bits + 40)
-            fam = FixedPoint.FXfamily(bits)
-            const_true = cls.getConst(fam_acc)
-            const_family = cls.getConst(fam)
-            approx = cls.calcConst(fam)
-            losses.append((bits, cls.lostbits(approx, const_true),
-                                 cls.lostbits(const_family, const_true)))
+            fam_acc = FXfamily(bits + 40)
+            fam = FXfamily(bits)
+            const_true = cls.calcConsts(fam_acc, famOnly=True)[0]
+
+            losses.append([ bits ] +
+                          [ cls.lostbits(apx, const_true)
+                                for apx in cls.calcConsts(fam) ])
         losses = numpy.array(losses)
 
         plt.xlabel('resolution bits')
         plt.ylabel('error bits')
         plt.grid(True)
-        lab_approx, lab_family = cls.getLabels()
-        plt.plot(losses[:,0], losses[:,1], label=lab_approx)
-        plt.plot(losses[:,0], losses[:,2], label=lab_family)
+        for colno, label in enumerate(cls.getLabels(), 1):
+            plt.plot(losses[:,0], losses[:,colno], label=label)
         plt.legend(loc='best', fontsize='small')
         plt.show()
 
 
 class PiAccuracyPlot(ConstAccuracyPlot):
     @classmethod
-    def calcConst(cls, fam):
-        return 6 * FixedPoint.FXnum(0.5, fam).asin()
-
-    @classmethod
-    def getConst(cls, fam):
-        return fam.pi
+    def calcConsts(cls, fam, famOnly=False):
+        consts = [ fam.pi ]
+        if not famOnly:
+            consts.append(6 * FXnum(0.5, fam).asin())
+            consts.append(4 *  ( 4 * (1 / FXnum(5, fam)).atan()
+                                - (1 / FXnum(239, fam)).atan() ))
+        return consts
 
     @classmethod
     def getLabels(cls):
-        return (r'$6 \sin^{-1} \frac{1}{2}$', r'$\pi_{family}$')
+        return ( r'$\pi_{family}$',
+                 r'$6 \sin^{-1} \frac{1}{2}$',
+                 r'$\pi_{Machin}$' )
 
 
 class Exp1AccuracyPlot(ConstAccuracyPlot):
     @classmethod
-    def calcConst(cls, fam):
-        return 1.0 / (FixedPoint.FXnum(-0.5, fam).exp() ** 2)
-
-    @classmethod
-    def getConst(cls, fam):
-        return fam.exp1
+    def calcConsts(cls, fam, famOnly=False):
+        consts = [ fam.exp1 ]
+        if not famOnly:
+            consts.append(1.0 / (FXnum(-0.5, fam).exp() ** 2))
+        return consts
 
     @classmethod
     def getLabels(cls):
-        return (r'$(e^{-1/2})^{-2}$', r'$e_{family}$')
+        return ( r'$e_{family}$',
+                 r'$(e^{-1/2})^{-2}$' )
 
 
 class Log2AccuracyPlot(ConstAccuracyPlot):
     @classmethod
-    def calcConst(cls, fam):
-        return (2 * FixedPoint.FXnum(3, fam).log()
-                - (FixedPoint.FXnum(9, fam) / 8).log()) / 3
-
-    @classmethod
-    def getConst(cls, fam):
-        return fam.log2
+    def calcConsts(cls, fam, famOnly=False):
+        consts = [ fam.log2 ]
+        if not famOnly:
+            consts.append((2 * FXnum(3, fam).log()
+                            - (FXnum(9, fam) / 8).log()) / 3)
+        return consts
 
     @classmethod
     def getLabels(cls):
-        return (r'$(\log9 - \log(9/8))/3$', r'$\log2_{family}$')
+        return ( r'$\log2_{family}$',
+                 r'$(\log9 - \log(9/8))/3$' )
 
 
 def main():

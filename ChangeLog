@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+29Mar20	- Extended accuracy demo plots to include Machin's formula for Pi
+
 27Mar20	- Neatened calculation of FXfamily.exp1
 	Added demo plot of accuracy of exp(1)
 
