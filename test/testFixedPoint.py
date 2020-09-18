@@ -39,6 +39,24 @@ class TestFamilies(FixedPointTest):
         self.assertEqual(FXnum(-0.78126, fam).scaledval, -13)
         self.assertEqual(FXnum(-0.8125, fam).scaledval, -13)
 
+    def testTwosCompCreate(self):
+        """Check creation of FXnum from two's complement representation"""
+        fam = FXfamily(2, 6)
+        self.assertEqual(fam.from2c(0), fam.zero)
+        self.assertEqual(fam.from2c(4), fam.unity)
+        self.assertEqual(fam.from2c(127), fam(31.75))
+        self.assertEqual(fam.from2c(128), fam(-32))
+        self.assertEqual(fam.from2c(255), fam(-0.25))
+        self.assertRaises(FXdomainError, fam.from2c, -1)
+        self.assertRaises(FXdomainError, fam.from2c, 256)
+
+        fam = FXfamily(3)
+        self.assertEqual(fam.from2c(1023, 7), fam(-0.125))
+        self.assertEqual(fam.from2c(511, 7), fam(63.875))
+        self.assertRaises(FXfamilyError, fam.from2c, 0)
+        self.assertRaises(FXfamilyError, fam.from2c, 0, None)
+
+
     def testFamEquality(self):
         """Check tests on equivalence of FXfamilies"""
         idxlist = [8, 16, 24, 33, 59]

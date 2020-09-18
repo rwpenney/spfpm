@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+18Sep20	- Added FXfamily method for importing two's complement numbers
+
 29Mar20	- Extended accuracy demo plots to include Machin's formula for Pi
 
 27Mar20	- Neatened calculation of FXfamily.exp1

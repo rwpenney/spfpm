@@ -81,10 +81,10 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.5.1'
+SPFPM_VERSION = '1.5.2'
 
 
-class FXfamily(object):
+class FXfamily:
     """Descriptor of the accuracy of a set of fixed-point numbers.
 
     This class defines the fixed-point resolution of a set of FXnum objects.
@@ -176,8 +176,8 @@ class FXfamily(object):
         """Square-root of two."""
         if self._sqrt2 is None:
             augfamily = self.augment()
-            # Use initial, very crude, approximation of sqrt(2)~=1.5
-            x = FXnum(3, augfamily) >> 1
+            # Use initial two-step Newton-Raphson approximation, sqrt(2)~=1.414216
+            x = FXnum(577, augfamily) / 408
             while True:
                 # Apply Newton-Raphson iteration to f(x)=2/(x*x)-1:
                 delta = (x * (2 - x * x)) >> 2
@@ -221,6 +221,30 @@ class FXfamily(object):
     def __call__(self, val):
         """Create a fixed-point number within this family."""
         return FXnum(val, family=self)
+
+    def from2c(self, n, n_intbits=None):
+        """Create fixed-point number from two's complement number
+
+        The supplied integer is assumed to represent all the bits
+        covered by the integer and fractional bits of this FXfamily.
+        """
+        try:
+            m = self.scale << (n_intbits if n_intbits is not None
+                                         else self.integer_bits)
+        except:
+            raise FXfamilyError("Two's complement requires known number"
+                                " of integer bits")
+
+        if n < 0 or n >= m:
+            raise FXdomainError("Two's complement number outside range"
+                                " [0, 0x{:x})".format(m))
+
+        if n < (m >> 1):
+            scaledval = n
+        else:
+            scaledval = n - m
+
+        return FXnum._rawbuild(self, scaledval)
 
     def convert(self, other, other_val):
         """Convert number from different number of fraction-bits"""
@@ -281,7 +305,7 @@ class FXbrokenError(FXexception):
 
 
 
-class FXnum(object):
+class FXnum:
     """Representation of a binary fixed-point real number."""
 
     __slots__ = ('family', 'scaledval')
