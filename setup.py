@@ -2,7 +2,7 @@
 # Installation/setup script for Simple Python Fixed-Point Module
 # RW Penney, January 2007
 
-from distutils.core import setup
+from setuptools import setup
 from FixedPoint import SPFPM_VERSION
 
 setup(

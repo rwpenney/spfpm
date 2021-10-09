@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Simple Python Fixed-Point Module (SPFPM)
-# (C)Copyright 2006-2020, RW Penney
+# (C)Copyright 2006-2021, RW Penney
 
 
 # This file is (C)Copyright 2006-2020, RW Penney
@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.5.2'
+SPFPM_VERSION = '1.5.3'
 
 
 class FXfamily:
