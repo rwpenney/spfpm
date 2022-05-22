@@ -627,6 +627,19 @@ class TestExpLog(FixedPointTest):
             exp = FXnum(x, fam62).exp()
             self.assertAlmostEqual(exp_true, exp)
 
+    def testLogHelpers(self):
+        fam = FXfamily(97)
+
+        self.assertEqual(fam(1)._log_align(), (fam(1), 0))
+        self.assertEqual(fam(32)._log_align(), (fam(1), 5))
+        self.assertEqual(fam(1/64)._log_align(), (fam(1), -6))
+        self.assertEqual((1 / fam(1 << 63))._log_align(), (fam(1), -63))
+
+        self.assertEqual(fam(33)._log_align(), (fam(33)/32, 5))
+        self.assertEqual(fam(90)._log_align(), (fam(90)/64, 6))
+        self.assertEqual(fam(105)._log_align(), (fam(105)/128, 7))
+        self.assertEqual(fam(0.01)._log_align(), (fam(0.01)*128, -7))
+
     def testLog(self):
         """Logarithm method agree with math.log"""
         fam62 = FXfamily(62)
@@ -638,8 +651,13 @@ class TestExpLog(FixedPointTest):
                 else:
                     x = base ** i
                 log_true = math.log(x)
+                log2_true = math.log2(x)
+
                 log = FXnum(x, fam62).log()
                 self.assertAlmostEqual(log_true, log)
+
+                log2 = FXnum(x, fam62).log2()
+                self.assertAlmostEqual(log2_true, log2)
 
     def testExpLog(self):
         """exp and log methods should be inverses & agree with math.*"""

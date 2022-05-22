@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # Simple Python Fixed-Point Module (SPFPM)
-# (C)Copyright 2006-2021, RW Penney
+# (C)Copyright 2006-2022, RW Penney
 
 
-# This file is (C)Copyright 2006-2020, RW Penney
+# This file is (C)Copyright 2006-2022, RW Penney
 # and is released under the Python-2.4.2 license
 # (see http://www.python.org/psf/license),
 # it therefore comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.5.3'
+SPFPM_VERSION = '1.5.4'
 
 
 class FXfamily:
@@ -661,21 +661,41 @@ class FXnum:
 
     def log(self):
         """Compute (natural) logarithm of given number"""
+        if self == 1:
+            return FXnum(0, self.family)
+        (val, count) = self._log_align()
+        return val._rawlog() + count * self.family.log2
+
+    def log2(self):
+        """Compute base-2 logarithm of given number"""
+        if self == 1:
+            return FXnum(0, self.family)
+        (val, count) = self._log_align()
+        return val._rawlog() / self.family.log2 + count
+
+    def _log_align(self):
+        """Extract powers of two to create x * 2^n with x close to unity"""
         if self.scaledval <= 0:
             raise FXdomainError
-        elif self == 1:
-            return FXnum(0, self.family)
-        uprthresh = FXnum(1.6, self.family)
+
+        uprthresh = FXnum(1.6, self.family) # biased to preserve low-order bits
         lwrthresh = uprthresh / 2
-        count = 0
-        val = self
+
+        count = self.scaledval.bit_length() - self.family.fraction_bits - 1
+        if count == 0:
+            val = self
+        elif count < 0:
+            val = self << (-count)
+        else:
+            val = self / (1 << count)
+
         while val > uprthresh:
             val /= 2
             count += 1
         while val < lwrthresh:
             val *= 2
             count -= 1
-        return val._rawlog() + count * self.family.log2
+        return (val, count)
 
     def _rawlog(self, isDelta=False):
         """Compute (natural) logarithm of given number (assumed close to 1)"""
