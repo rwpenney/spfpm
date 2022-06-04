@@ -140,6 +140,25 @@ class TestFamilies(FixedPointTest):
                 else:
                     if cnt > limit: self.fail()
 
+    def testPseudoPrecision(self):
+        def prec(bits, tx=4):
+            return math.ceil(FXfamily(bits)._pseudo_precision(tx))
+
+        self.assertEqual(prec(1), 1)
+        self.assertEqual(prec(2), 2)
+        self.assertEqual(prec(3), 3)
+        self.assertEqual(prec(4), 3)
+
+        self.assertEqual(prec(8), 5)
+        self.assertEqual(prec(12), 7)
+        self.assertEqual(prec(16), 8)
+        self.assertEqual(prec(32), 13)
+        self.assertEqual(prec(64), 20)
+
+        self.assertEqual(prec(2, 0.01), 1)
+        self.assertEqual(prec(5, 10), 5)
+        self.assertEqual(prec(71, 50), 48)
+
 
 class TestNumInit(FixedPointTest):
     def testRawBuild(self):
@@ -230,9 +249,10 @@ class TestNumPrint(FixedPointTest):
             return FXnum(x, FXfamily(bits)).toDecimalString(precision)
 
         self.assertEqual(build(0.5, 1), '0.5')
-        self.assertEqual(build(0.25, 2, 2), '0.25')
+        self.assertEqual(build(0.25, 2), '0.25')
+        self.assertEqual(build(0.25, 2, 7), '0.25')
         self.assertEqual(build(0.125, 3, 2), '0.12')
-        self.assertEqual(build(0.125, 4), '0.12')
+        self.assertEqual(build(0.125, 4), '0.125')
 
     def testDecimalRound(self):
         third = FXnum(1, FXfamily(200)) / 3

@@ -1,5 +1,13 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+03Jun22	- *** spfpm-1.6 released
+
+03Jun22	- Reworked decimal-precision estimation within toDecimalString()
+
+22May22	- Added log2() method and improved efficiency for logs far from unity
+
+09Oct21	- Migrated from distutils to setuptools
+
 18Sep20	- Added FXfamily method for importing two's complement numbers
 
 29Mar20	- Extended accuracy demo plots to include Machin's formula for Pi

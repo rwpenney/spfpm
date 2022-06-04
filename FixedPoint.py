@@ -28,23 +28,23 @@ but solely through an explicit cast.
 
 >>> x = FXnum(2.1)                  # default FXfamily, with 64 fractional bits
 >>> print(x)
-2.10000000000000008881
+2.1000000000000000888
 >>> x = FXnum(21) / 10              # fractional error ~1/2^64 or ~5e-20
 >>> print(x)
-2.09999999999999999996
+2.0999999999999999999
 >>> rx = x.sqrt()                   # rx created in same family as x
 >>> print(rx)
-1.44913767461894385735
+1.4491376746189438573
 >>> v = x + 2 * rx
 >>> print(v)
-4.99827534923788771467
+4.9982753492378877146
 
 >>> y = FXnum(3.2, FXfamily(12))    # lower-precision 12-bit number
 >>> ly = y.log()                    # ly created in same family as y
 >>> print(ly)                       # fractional error ~1/2^12 or ~2e-4
-1.1628
+1.162841
 >>> print(ly.exp())
-3.1987
+3.198730
 >>> fy = float(y)
 >>> print(fy)
 3.199951171875
@@ -52,22 +52,22 @@ but solely through an explicit cast.
 >>> # a = x + y                     # throws exception - different families
 >>> a = x + FXnum(y, _defaultFamily)
 >>> print(a)
-5.30007324218749999996
+5.3000732421874999999
 >>> b = rx + x                      # ok - same families
 >>> # c = rx + ly                   # throws exception - different families
 >>> d = ly + y                      # ok - same families
 
 >>> a = FXnum(1.4, FXfamily(12, 4)) # limit magnitude to 2^(4-1)
 >>> print(a)
-1.3999
+1.399902
 >>> print(a * 5, a * -5)
-6.9995 -6.9995
+6.999511 -6.999511
 >>> #print(a * 6, a * -6)           # throws exception indicating overflow
 
 >>> fam = FXfamily(200)
 >>> print(fam.pi)
-3.1415926535897932384626433832795028841971693993751058209749444
->>> #   Accurate to 60 decimal places                         ^- first error
+3.141592653589793238462643383279502884197169399375105820974944
+>>> #   60-digit precision has error less than 6e-61
 
 Note:
     Be careful not to assume that a large number of fractional bits within
@@ -81,7 +81,12 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.5.4'
+SPFPM_VERSION = '1.6'
+
+import math
+
+
+log10_2 = math.log10(2)
 
 
 class FXfamily:
@@ -118,6 +123,23 @@ class FXfamily:
     def resolution(self):
         """The number of fractional binary digits"""
         return self.fraction_bits
+
+    def _pseudo_precision(self, transition_width=4):
+        """Estimate an effective number of fractional decimal digits
+
+        The number of decimal digits needed to exactly represent
+        b fractional bits is also b, but this drastically overestimates
+        the practical accuracy. This formula heuristically interpolates
+        between one decimal digit per bit, and a growth rate of order
+        0.301 digits per bit for bit-counts greater than about four.
+        """
+        frac_bits = self.fraction_bits
+        if frac_bits < (10 * transition_width):
+            enhancement = -(1 - log10_2) * transition_width \
+                            * math.expm1(-frac_bits / transition_width)
+        else:
+            enhancement = 0.0
+        return frac_bits * log10_2 + enhancement
 
     @property
     def exp1(self):
@@ -477,6 +499,12 @@ class FXnum:
         """Convert number (as decimal) into string
 
         precision -     The maximum number of digits after the decimal point.
+                        If this is None, then a heuristic estimate is made
+                        of the indicative base-10 precision, which may be
+                        significantly less than the number of decimal digits
+                        required to fully represent the lowest-order
+                        fractional bit. Set this to self.family.fractional_bits
+                        to guarantee that all non-zero decimal digits are shown.
         round10 -       Round last decimal digit of fractional part,
                         by adding 0.5/10^precision.
         """
@@ -484,8 +512,7 @@ class FXnum:
         # than string concatenation building 'rep' from successive digits
         famScale = self.family.scale
         if precision is None or not isinstance(precision, int):
-            precision = int((3 + self.family.fraction_bits) / 3.32)
-            # Each fractional bit adds about log_10(2) decimal digits
+            precision = round(self.family._pseudo_precision())
 
         val = self.scaledval
         rep = ''
