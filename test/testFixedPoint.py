@@ -184,6 +184,15 @@ class TestNumInit(FixedPointTest):
         self.assertIsInstance(xraw, FXnum)
         self.assertIsNot(x, xraw)
 
+    def testNative(self):
+        fam20 = FXfamily(20, 8)
+        self.assertEqual(float(FXnum(val=17, family=fam20)), 17)
+        self.assertEqual(float(FXnum(val=1.125, family=fam20)), 1.125)
+
+        fam2000 = FXfamily(2000, 8)
+        self.assertEqual(float(FXnum(val=29, family=fam2000)), 29)
+        self.assertEqual(float(FXnum(val=31.0625, family=fam2000)), 31.0625)
+
     def testLongRounding(self):
         """Check assumptions about integers rounding towards minus infinity."""
         for base in range(2, 8):
@@ -207,9 +216,17 @@ class TestNumConvert(FixedPointTest):
 
     def testIntCasts(self):
         """Rounding on casting to int should match float-conversions"""
-        for i in range(-40,40):
+        for i in range(-40, 40):
             x = i / 8.0
             self.assertEqual(int(x), int(FXnum(x)))
+
+    def testFloatCasts(self):
+        for res in [32, 128, 512, 2048]:
+            fam = FXfamily(res)
+            for i in range(-600, 600, 10):
+                r = 10 ** (i * 0.5)
+                x = FXnum(r, family=fam)
+                self.assertAlmostEqual(float(x), r, places=8)
 
     def testNegating(self):
         """Check prefix operators"""

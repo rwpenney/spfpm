@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.6.1'
+SPFPM_VERSION = '1.6.2'
 
 import math
 
@@ -339,9 +339,16 @@ class FXnum:
             # Assume that val is similar to FXnum:
             self.scaledval = converter(val.family, val.scaledval)
         except AttributeError:
-            self.scaledval = kwargs.get('scaled_value',
-                                        int(round(val * family.scale)))
-            # 'int' casting improves compatibility with Python-2.7
+            if 'scaled_value' in kwargs:
+                sv = kwargs['scaled_value']
+            elif isinstance(val, float):
+                tmpfam = FXfamily(family.fraction_bits + 1)
+                (n, d) = val.as_integer_ratio()
+                sv = ((tmpfam(n) / d).scaledval + 1) >> 1
+            else:
+                sv = int(round(val * family.scale))
+                # 'int' casting improves compatibility with Python-2.7
+            self.scaledval = sv
         self.family.validate(self.scaledval)
 
     @classmethod
@@ -371,7 +378,20 @@ class FXnum:
 
     def __float__(self):
         """Cast to floating-point"""
-        return float(self.scaledval) / float(self.family.scale)
+        sv_bits = self.scaledval.bit_length()
+        thresh = 970
+        if sv_bits < thresh and self.family.fraction_bits < thresh:
+            return float(self.scaledval) / float(self.family.scale)
+        else:
+            num_shift = max(sv_bits - thresh, 0)
+            dnm_shift = max(self.family.fraction_bits - thresh, 0)
+            x = (float(self.scaledval >> num_shift)
+                    / float(self.family.scale >> dnm_shift))
+            if num_shift > dnm_shift:
+                s = 1 << (num_shift - dnm_shift)
+            else:
+                s = 1.0 / (1 << (dnm_shift - num_shift))
+            return x * s
 
     def _CastOrFail_(self, other):
         """Turn number into FXnum or check that it is in same family"""
