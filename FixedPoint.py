@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.6'
+SPFPM_VERSION = '1.6.1'
 
 import math
 
@@ -705,7 +705,7 @@ class FXnum:
         if self.scaledval <= 0:
             raise FXdomainError
 
-        uprthresh = FXnum(1.6, self.family) # biased to preserve low-order bits
+        uprthresh = FXnum(13, self.family) >> 3 # biased to preserve low-order bits
         lwrthresh = uprthresh / 2
 
         count = self.scaledval.bit_length() - self.family.fraction_bits - 1

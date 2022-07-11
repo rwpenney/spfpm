@@ -9,9 +9,12 @@ from FixedPoint import FXfamily, FXnum, \
 
 
 class FixedPointTest(unittest.TestCase):
-    def assertAlmostEqual(self, first, second, places=7):
+    def assertAlmostEqual(self, first, second, places=7, family=None):
         """Overload TestCase.assertAlmostEqual() to avoid use of round()"""
-        tol = 10.0 ** -places
+        if family is not None:
+            tol = family(10) ** - places
+        else:
+            tol = 10.0 ** -places
         self.assertTrue(abs(first-second) < tol,
                         '{} and {} differ by more than {} ({})'.format(
                             first, second, tol, (first - second)))
@@ -55,7 +58,6 @@ class TestFamilies(FixedPointTest):
         self.assertEqual(fam.from2c(511, 7), fam(63.875))
         self.assertRaises(FXfamilyError, fam.from2c, 0)
         self.assertRaises(FXfamilyError, fam.from2c, 0, None)
-
 
     def testFamEquality(self):
         """Check tests on equivalence of FXfamilies"""
@@ -158,6 +160,17 @@ class TestFamilies(FixedPointTest):
         self.assertEqual(prec(2, 0.01), 1)
         self.assertEqual(prec(5, 10), 5)
         self.assertEqual(prec(71, 50), 48)
+
+    def testWideVals(self):
+        fam = FXfamily(2048)
+        half = fam(1) / 2
+        quarter = fam(1) / 4
+        eps = fam(1) >> 2000
+
+        self.assertEqual(fam(1) * 2, fam(2))
+        self.assertEqual(fam(4).sqrt(), fam(2))
+        self.assertAlmostEqual(fam(9) ** half, fam(3), places=40, family=fam)
+        self.assertAlmostEqual(fam(16) ** quarter, fam(2), places=40, family=fam)
 
 
 class TestNumInit(FixedPointTest):
