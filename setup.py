@@ -18,7 +18,7 @@ setup(
         'for manipulating binary fixed-point numbers ' + \
         'of essentially arbitrary precision. ' + \
         'It aims to be more suitable for simulating digital ' + \
-        'fixed-point artihmetic within electronic hardware ' + \
+        'fixed-point arithmetic within electronic hardware ' + \
         '(e.g. for digital signal processing (DSP) applications) ' + \
         'than the Decimal package, which is more concerned ' + \
         'with fixed-point arithmetic in base-10. ' + \
