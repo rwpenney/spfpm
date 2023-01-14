@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.6.2'
+SPFPM_VERSION = '1.6.3'
 
 import math
 
@@ -269,11 +269,17 @@ class FXfamily:
         return FXnum._rawbuild(self, scaledval)
 
     def convert(self, other, other_val):
-        """Convert number from different number of fraction-bits"""
+        """Convert representation of number from different number of fraction-bits
+
+        The supplied scaled value (internal representation) is bit-shifted
+        to match the fractional bits of the invoking FXfamily.
+        """
         bit_inc = self.fraction_bits - other.fraction_bits
         if bit_inc == 0:
+            # No change needed
             return other_val
         elif bit_inc > 0:
+            # Increase fractional width, assuming residual half-bit error
             new_val = other_val << bit_inc
             if other_val > 0:
                 new_val |= 1 << (bit_inc - 1)
@@ -523,7 +529,7 @@ class FXnum:
                         of the indicative base-10 precision, which may be
                         significantly less than the number of decimal digits
                         required to fully represent the lowest-order
-                        fractional bit. Set this to self.family.fractional_bits
+                        fractional bit. Set this to self.family.fraction_bits
                         to guarantee that all non-zero decimal digits are shown.
         round10 -       Round last decimal digit of fractional part,
                         by adding 0.5/10^precision.

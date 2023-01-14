@@ -106,18 +106,23 @@ def piPlot():
     pipoints = numpy.array(pipoints)
     truepoints = numpy.array([[b_min, pi_true], [b_max, pi_true]])
 
-    plt.xlabel('bits')
-    plt.ylabel(r'$4 \tan^{-1} 1$')
-    plt.xlim([b_min, b_max])
-    plt.ylim([3.13, 3.16])
-    plt.grid(True)
+    fig, ax = plt.subplots()
+    fig.canvas.set_window_title('spfpm - estimating pi')
+    ax.set_xlabel('bits')
+    ax.set_ylabel(r'$4 \tan^{-1} 1$')
+    ax.set_xlim([b_min, b_max])
+    ax.set_ylim([3.13, 3.16])
+    ax.grid(True)
     for arr, style in ((truepoints, '--'), (pipoints, '-')):
-        plt.plot(arr[:,0], arr[:,1], ls=style)
-    plt.show()
+        ax.plot(arr[:,0], arr[:,1], ls=style)
+
+    return fig
 
 
 class ConstAccuracyPlot(object):
     """Plot graph of fractional bits wasted due to accumulated roundoff."""
+
+    const_name = None
 
     @classmethod
     def calcConsts(cls, fam, famOnly=False):
@@ -150,16 +155,21 @@ class ConstAccuracyPlot(object):
                                 for apx in cls.calcConsts(fam) ])
         losses = numpy.array(losses)
 
-        plt.xlabel('resolution bits')
-        plt.ylabel('error bits')
-        plt.grid(True)
+        fig, ax = plt.subplots()
+        fig.canvas.set_window_title(f'spfpm - FXfamily.{cls.const_name} accuracy')
+        ax.set_xlabel('resolution bits')
+        ax.set_ylabel('error bits')
+        ax.grid(True)
         for colno, label in enumerate(cls.getLabels(), 1):
-            plt.plot(losses[:,0], losses[:,colno], label=label)
-        plt.legend(loc='best', fontsize='small')
-        plt.show()
+            ax.plot(losses[:,0], losses[:,colno], label=label)
+        ax.legend(loc='best', fontsize='small')
+
+        return fig
 
 
 class PiAccuracyPlot(ConstAccuracyPlot):
+    const_name = 'pi'
+
     @classmethod
     def calcConsts(cls, fam, famOnly=False):
         consts = [ fam.pi ]
@@ -177,6 +187,8 @@ class PiAccuracyPlot(ConstAccuracyPlot):
 
 
 class Exp1AccuracyPlot(ConstAccuracyPlot):
+    const_name = 'exp1'
+
     @classmethod
     def calcConsts(cls, fam, famOnly=False):
         consts = [ fam.exp1 ]
@@ -191,6 +203,8 @@ class Exp1AccuracyPlot(ConstAccuracyPlot):
 
 
 class Log2AccuracyPlot(ConstAccuracyPlot):
+    const_name = 'log2'
+
     @classmethod
     def calcConsts(cls, fam, famOnly=False):
         consts = [ fam.log2 ]
@@ -230,6 +244,9 @@ def main():
 
     for demoname in args.demos:
         demos[demoname]()
+
+    if HAVE_MATPLOTLIB:
+        plt.show()
 
 
 if __name__ == "__main__":
