@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Simple Python Fixed-Point Module (SPFPM)
-# (C)Copyright 2006-2022, RW Penney
+# (C)Copyright 2006-2023, RW Penney
 
 
 # This file is (C)Copyright 2006-2022, RW Penney
@@ -81,12 +81,9 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.6.3'
+SPFPM_VERSION = '1.6.4'
 
 import math
-
-
-log10_2 = math.log10(2)
 
 
 class FXfamily:
@@ -100,6 +97,8 @@ class FXfamily:
     for example, sets of 12-bit, 32-bit & 200-bit quantities
     can be manipulated concurrently.
     """
+
+    _log10_2 = math.log10(2)
 
     def __init__(self, n_bits=64, n_intbits=None):
         self.fraction_bits = n_bits         # Bits to right of binary point
@@ -135,11 +134,11 @@ class FXfamily:
         """
         frac_bits = self.fraction_bits
         if frac_bits < (10 * transition_width):
-            enhancement = -(1 - log10_2) * transition_width \
+            enhancement = -(1 - self._log10_2) * transition_width \
                             * math.expm1(-frac_bits / transition_width)
         else:
             enhancement = 0.0
-        return frac_bits * log10_2 + enhancement
+        return frac_bits * self._log10_2 + enhancement
 
     @property
     def exp1(self):
