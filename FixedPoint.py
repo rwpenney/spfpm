@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # Simple Python Fixed-Point Module (SPFPM)
-# (C)Copyright 2006-2023, RW Penney
+# (C)Copyright 2006-2024, RW Penney
 
 
-# This file is (C)Copyright 2006-2022, RW Penney
+# This file is (C)Copyright 2006-2024, RW Penney
 # and is released under the Python-2.4.2 license
 # (see http://www.python.org/psf/license),
 # it therefore comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.6.4'
+SPFPM_VERSION = '1.6.5'
 
 import math
 

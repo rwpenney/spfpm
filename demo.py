@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Demonstration of Simple Python Fixed-Point Module
-# (C)Copyright 2006-2023, RW Penney
+# (C)Copyright 2006-2024, RW Penney
 
 import argparse, time
 from collections import OrderedDict
@@ -106,8 +106,7 @@ def piPlot():
     pipoints = numpy.array(pipoints)
     truepoints = numpy.array([[b_min, pi_true], [b_max, pi_true]])
 
-    fig, ax = plt.subplots()
-    fig.canvas.set_window_title('spfpm - estimating pi')
+    fig, ax = plt.subplots(num='spfpm - estimating pi')
     ax.set_xlabel('bits')
     ax.set_ylabel(r'$4 \tan^{-1} 1$')
     ax.set_xlim([b_min, b_max])
@@ -155,8 +154,7 @@ class ConstAccuracyPlot(object):
                                 for apx in cls.calcConsts(fam) ])
         losses = numpy.array(losses)
 
-        fig, ax = plt.subplots()
-        fig.canvas.set_window_title(f'spfpm - FXfamily.{cls.const_name} accuracy')
+        fig, ax = plt.subplots(num=f'spfpm - FXfamily.{cls.const_name} accuracy')
         ax.set_xlabel('resolution bits')
         ax.set_ylabel('error bits')
         ax.grid(True)
