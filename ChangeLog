@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+20Jun26	- Removed, mathematically dubious, half-LSB rounding in widening conversions
+
 03Jun22	- *** spfpm-1.6 released
 
 03Jun22	- Reworked decimal-precision estimation within toDecimalString()

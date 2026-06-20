@@ -105,7 +105,7 @@ class FXfamily:
         self.integer_bits = n_intbits       # Bits to left of binary point (including sign)
         self.scale = 1 << n_bits
         self._roundup = 1 << (n_bits - 1)
-        self._widen_rounding = None
+        self._default_converter = self.convert
 
         try:
             thresh = 1 << (n_bits + n_intbits - 1)
@@ -280,16 +280,34 @@ class FXfamily:
             return other_val
         elif bit_inc > 0:
             # Increase fractional width
+            return other_val << bit_inc
+        else:
+            # Truncate least-significant bits
+            return (other_val >> -bit_inc)
+
+    def convert_lsb_bias(self, other, other_val):
+        """Convert from different number of fraction-bits, with half-LSB shift
+
+        The supplied scaled value (internal representation) is bit-shifted
+        to match the fractional bits of the invoking FXfamily.
+        In addition, a half-LSB shift is applied when converting to
+        a family with more fractional bits.
+
+        Use of this converter is DEPRECATED; it is retained only
+        for, questionable, backwards compatibility.
+        """
+        bit_inc = self.fraction_bits - other.fraction_bits
+        if bit_inc == 0:
+            return other_val
+        elif bit_inc > 0:
             new_val = other_val << bit_inc
-            if self._widen_rounding == 'legacy':
-                # (Dubiously) assume residual half-bit error in input
-                if other_val > 0:
-                    new_val |= 1 << (bit_inc - 1)
-                else:
-                    new_val |= ((1 << (bit_inc -1)) - 1)
+            # (Dubiously) assume residual half-bit error in input
+            if other_val > 0:
+                new_val |= 1 << (bit_inc - 1)
+            else:
+                new_val |= ((1 << (bit_inc -1)) - 1)
             return new_val
         else:
-            # Safest approach is to truncate bits, rather than rounding:
             return (other_val >> -bit_inc)
 
     def augment(self, opcount=None):
@@ -334,7 +352,6 @@ class FXbrokenError(FXexception):
     """Signal some form of internal error, e.g. broken logic"""
 
 
-
 class FXnum:
     """Representation of a binary fixed-point real number."""
 
@@ -342,7 +359,7 @@ class FXnum:
 
     def __init__(self, val=0, family=_defaultFamily, **kwargs):
         self.family = family
-        converter = family.convert
+        converter = family._default_converter
         try:
             # Assume that val is similar to FXnum:
             self.scaledval = converter(val.family, val.scaledval)
