@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # Simple Python Fixed-Point Module (SPFPM)
-# (C)Copyright 2006-2024, RW Penney
+# (C)Copyright 2006-2026, RW Penney
 
 
-# This file is (C)Copyright 2006-2024, RW Penney
+# This file is (C)Copyright 2006-2026, RW Penney
 # and is released under the Python-2.4.2 license
 # (see http://www.python.org/psf/license),
 # it therefore comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
@@ -52,7 +52,7 @@ but solely through an explicit cast.
 >>> # a = x + y                     # throws exception - different families
 >>> a = x + FXnum(y, _defaultFamily)
 >>> print(a)
-5.3000732421874999999
+5.2999511718749999999
 >>> b = rx + x                      # ok - same families
 >>> # c = rx + ly                   # throws exception - different families
 >>> d = ly + y                      # ok - same families
@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.6.5'
+SPFPM_VERSION = '1.7.0'
 
 import math
 
@@ -105,6 +105,7 @@ class FXfamily:
         self.integer_bits = n_intbits       # Bits to left of binary point (including sign)
         self.scale = 1 << n_bits
         self._roundup = 1 << (n_bits - 1)
+        self._widen_rounding = None
 
         try:
             thresh = 1 << (n_bits + n_intbits - 1)
@@ -278,12 +279,14 @@ class FXfamily:
             # No change needed
             return other_val
         elif bit_inc > 0:
-            # Increase fractional width, assuming residual half-bit error
+            # Increase fractional width
             new_val = other_val << bit_inc
-            if other_val > 0:
-                new_val |= 1 << (bit_inc - 1)
-            else:
-                new_val |= ((1 << (bit_inc -1)) - 1)
+            if self._widen_rounding == 'legacy':
+                # (Dubiously) assume residual half-bit error in input
+                if other_val > 0:
+                    new_val |= 1 << (bit_inc - 1)
+                else:
+                    new_val |= ((1 << (bit_inc -1)) - 1)
             return new_val
         else:
             # Safest approach is to truncate bits, rather than rounding:
