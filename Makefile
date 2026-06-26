@@ -11,8 +11,8 @@ demo:
 
 .PHONY:	test
 test:
-	${PYTHON} -t FixedPoint.py
-	(cd test; ${PYTHON} -t testFixedPoint.py)
+	${PYTHON} FixedPoint.py
+	(cd test; ${PYTHON} testFixedPoint.py)
 
 .PHONY:	install
 install:

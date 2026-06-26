@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # Simple Python Fixed-Point Module (SPFPM)
-# (C)Copyright 2006-2024, RW Penney
+# (C)Copyright 2006-2026, RW Penney
 
 
-# This file is (C)Copyright 2006-2024, RW Penney
+# This file is (C)Copyright 2006-2026, RW Penney
 # and is released under the Python-2.4.2 license
 # (see http://www.python.org/psf/license),
 # it therefore comes with NO WARRANTY, and NO CLAIMS OF FITNESS FOR ANY PURPOSE.
@@ -52,7 +52,7 @@ but solely through an explicit cast.
 >>> # a = x + y                     # throws exception - different families
 >>> a = x + FXnum(y, _defaultFamily)
 >>> print(a)
-5.3000732421874999999
+5.2999511718749999999
 >>> b = rx + x                      # ok - same families
 >>> # c = rx + ly                   # throws exception - different families
 >>> d = ly + y                      # ok - same families
@@ -81,7 +81,7 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.6.5'
+SPFPM_VERSION = '1.7.0'
 
 import math
 
@@ -105,6 +105,7 @@ class FXfamily:
         self.integer_bits = n_intbits       # Bits to left of binary point (including sign)
         self.scale = 1 << n_bits
         self._roundup = 1 << (n_bits - 1)
+        self._default_converter = self.convert
 
         try:
             thresh = 1 << (n_bits + n_intbits - 1)
@@ -278,15 +279,35 @@ class FXfamily:
             # No change needed
             return other_val
         elif bit_inc > 0:
-            # Increase fractional width, assuming residual half-bit error
+            # Increase fractional width
+            return other_val << bit_inc
+        else:
+            # Truncate least-significant bits
+            return (other_val >> -bit_inc)
+
+    def convert_lsb_bias(self, other, other_val):
+        """Convert from different number of fraction-bits, with half-LSB shift
+
+        The supplied scaled value (internal representation) is bit-shifted
+        to match the fractional bits of the invoking FXfamily.
+        In addition, a half-LSB shift is applied when converting to
+        a family with more fractional bits.
+
+        Use of this converter is DEPRECATED; it is retained only
+        for, questionable, backwards compatibility.
+        """
+        bit_inc = self.fraction_bits - other.fraction_bits
+        if bit_inc == 0:
+            return other_val
+        elif bit_inc > 0:
             new_val = other_val << bit_inc
+            # (Dubiously) assume residual half-bit error in input
             if other_val > 0:
                 new_val |= 1 << (bit_inc - 1)
             else:
                 new_val |= ((1 << (bit_inc -1)) - 1)
             return new_val
         else:
-            # Safest approach is to truncate bits, rather than rounding:
             return (other_val >> -bit_inc)
 
     def augment(self, opcount=None):
@@ -331,7 +352,6 @@ class FXbrokenError(FXexception):
     """Signal some form of internal error, e.g. broken logic"""
 
 
-
 class FXnum:
     """Representation of a binary fixed-point real number."""
 
@@ -339,7 +359,7 @@ class FXnum:
 
     def __init__(self, val=0, family=_defaultFamily, **kwargs):
         self.family = family
-        converter = family.convert
+        converter = family._default_converter
         try:
             # Assume that val is similar to FXnum:
             self.scaledval = converter(val.family, val.scaledval)

@@ -261,6 +261,23 @@ class TestNumConvert(FixedPointTest):
                         self.assertAlmostEqual(x, float(fp0))
                         self.assertAlmostEqual(x, float(fp1))
 
+    def testWidening(self):
+        fam0 = FXfamily(8)
+        fam1 = FXfamily(16)
+        eps = 1.0 / 256
+
+        for n in range(-10, 11):
+            self.assertEqual(FXnum(fam0(n), fam1), fam1(n))
+            self.assertEqual(FXnum(fam0(n+eps), fam1), fam1(n+eps))
+            self.assertEqual(FXnum(fam0(n-eps), fam1), fam1(n-eps))
+
+    def testWideningLegacy(self):
+        fam0 = FXfamily(8)
+        fam1 = FXfamily(16)
+        fam1._default_converter = fam1.convert_lsb_bias
+
+        self.assertEqual(fam1(fam0.zero), fam1(127.0 / 65536))
+        # This is obviously mathematically dubious!
 
 
 class TestNumPrint(FixedPointTest):

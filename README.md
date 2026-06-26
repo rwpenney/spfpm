@@ -27,7 +27,7 @@ such as [mpmath](http://mpmath.org/),
 or [GMP](https://gmplib.org/) for heavyweight calculations.
 
 Development currently targets [Python](https://www.python.org)
-versions 3.3 and later, although the library may also
+versions 3.6 and later, although the library may also
 be usable with python-2.7.
 The latest version of spfpm can be found
 on [GitHub](https://github.com/rwpenney/spfpm).
@@ -103,4 +103,4 @@ the [accepted result](http://hexpi.sourceforge.net/).
 
 All files are released under
 the [Python PSF License](https://docs.python.org/3/license.html)
-and are Copyright 2006-2024 RW Penney.
+and are Copyright 2006-2026 RW Penney.

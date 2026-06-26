@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Demonstration of Simple Python Fixed-Point Module
-# (C)Copyright 2006-2024, RW Penney
+# (C)Copyright 2006-2026, RW Penney
 
 import argparse, time
 from collections import OrderedDict
