@@ -1,0 +1,27 @@
+[build-system]
+requires = [ "setuptools>=66.0" ]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spfpm"
+version = "1.8.0"
+authors = [ { name="RW Penney" } ]
+description = "Tools for arithmetic on fixed-point (binary) numbers"
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = [
+    "arithmetic", "fixed-point", "trigonometry", "arbitrary precision" ]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Embedded Systems" ]
+license-files = [ "LICEN[CS]E*" ]
+
+[tool.setuptools]
+py-modules = [ "FixedPoint" ]
+
+[project-urls]
+Homepage = "https://github.com/rwpenney/spfpm"
+Issues = "https://github.com/rwpenney/spfpm/issues"
