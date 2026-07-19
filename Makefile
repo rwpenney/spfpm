@@ -12,15 +12,7 @@ demo:
 .PHONY:	test
 test:
 	${PYTHON} FixedPoint.py
-	(cd test; ${PYTHON} testFixedPoint.py)
-
-.PHONY:	install
-install:
-	${PYTHON} setup.py install
-
-.PHONY:	all-dists
-all-dists:
-	${PYTHON} setup.py sdist --formats=gztar,zip
+	(cd tests; ${PYTHON} testFixedPoint.py)
 
 .PHONY:	clean
 clean:
