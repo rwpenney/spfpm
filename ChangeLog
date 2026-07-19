@@ -1,5 +1,9 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+19Jul26	- *** spfpm-1.8 released
+
+15Jul26	- Migrated packaging configuration from setup.py to pyproject.toml
+
 26Jun26	- *** spfpm-1.7 released
 
 20Jun26	- Removed, mathematically dubious, half-LSB rounding in widening conversions

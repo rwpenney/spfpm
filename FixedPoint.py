@@ -81,8 +81,6 @@ SPFPM is provided as-is, with no warranty of any form.
 """
 
 
-SPFPM_VERSION = '1.7.0'
-
 import math
 
 

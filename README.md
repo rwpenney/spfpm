@@ -27,7 +27,7 @@ such as [mpmath](http://mpmath.org/),
 or [GMP](https://gmplib.org/) for heavyweight calculations.
 
 Development currently targets [Python](https://www.python.org)
-versions 3.6 and later, although the library may also
+versions 3.7 and later, although the library may also
 be usable with python-2.7.
 The latest version of spfpm can be found
 on [GitHub](https://github.com/rwpenney/spfpm).
