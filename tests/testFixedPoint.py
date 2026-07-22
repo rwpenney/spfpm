@@ -3,6 +3,7 @@
 # RW Penney, January 2006
 
 import math, sys, unittest
+from fractions import Fraction
 sys.path.insert(0, '..')
 from FixedPoint import FXfamily, FXnum, \
         FXoverflowError, FXdomainError, FXfamilyError
@@ -553,6 +554,52 @@ class TestArithmetic(FixedPointTest):
 
                 tmp = fpx / float(y * scale)
                 self.assertAlmostEqual(fpa, tmp)
+
+    def testDivisionExact(self):
+        """Exactly-representable quotients should be returned exactly (issue #14)"""
+        fam = FXfamily(64)
+        # x / x == 1 for every value, even close to the resolution floor
+        for k in (1, 2, 3, 7, 1 << 20, 1 << 40, (1 << 63) - 1):
+            x = FXnum._rawbuild(fam, k)
+            self.assertEqual((x / x).scaledval, fam.scale)
+        self.assertEqual(FXnum(1, fam) / FXnum(4, fam), 0.25)
+        self.assertEqual(FXnum(1, fam) / (FXnum(1, fam) / 4), 4)
+        self.assertEqual(FXnum(1.375, FXfamily(4, 5))
+                            / FXnum(0.125, FXfamily(4, 5)), 11)
+        # negative divisors must be sign-symmetric
+        fam44 = FXfamily(4, 4)
+        for a, b, expect in [(1.0, -1.0, -1.0), (-1.0, -1.0, 1.0),
+                             (3.0, -2.0, -1.5), (-3.0, -2.0, 1.5),
+                             (7.5, -2.5, -3.0), (-7.5, -2.5, 3.0)]:
+            self.assertEqual(float(fam44(a) / fam44(b)), expect)
+
+    def testDivisionRounding(self):
+        """Quotients should match the exactly-rounded rational value (issue #14)"""
+        fam = FXfamily(48)
+        scale = fam.scale
+        vals = [Fraction(n, d) for n in (-9, -1, 1, 2, 7, 40)
+                                for d in (1, 3, 4, 250, 1 << 15)]
+        for a in vals:
+            fpa = FXnum._rawbuild(fam, round(a * scale))
+            for b in vals:
+                fpb = FXnum._rawbuild(fam, round(b * scale))
+                if fpb.scaledval == 0: continue
+                q = Fraction(fpa.scaledval * scale, fpb.scaledval)
+                ideal = (2 * q.numerator + q.denominator) // (2 * q.denominator)
+                self.assertEqual((fpa / fpb).scaledval, ideal)
+
+    def testFloatCreateNoDoubleRound(self):
+        """Float creation should round the exact value once (issue #14)"""
+        self.assertEqual(FXnum(0.437, FXfamily(3)).scaledval, 3)
+        self.assertEqual(FXnum(0.438, FXfamily(3)).scaledval, 4)
+        for f in (0.1, -0.1, 0.2, 2.1, 3.2, 1.4, 0.375, 0.437,
+                  1.375, 1.0 / 7.0, -1000.0009, 123.456):
+            for fbits in (3, 12, 24, 53, 64):
+                fam = FXfamily(fbits)
+                exact = Fraction(*f.as_integer_ratio()) * fam.scale
+                ideal = ((2 * exact.numerator + exact.denominator)
+                            // (2 * exact.denominator))
+                self.assertEqual(FXnum(f, fam).scaledval, ideal)
 
     def testBitShifts(self):
         """Check effects of left & right shift operators."""
