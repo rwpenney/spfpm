@@ -31,20 +31,20 @@ but solely through an explicit cast.
 2.1000000000000000888
 >>> x = FXnum(21) / 10              # fractional error ~1/2^64 or ~5e-20
 >>> print(x)
-2.0999999999999999999
+2.1000000000000000000
 >>> rx = x.sqrt()                   # rx created in same family as x
 >>> print(rx)
-1.4491376746189438573
+1.4491376746189438574
 >>> v = x + 2 * rx
 >>> print(v)
-4.9982753492378877146
+4.9982753492378877148
 
 >>> y = FXnum(3.2, FXfamily(12))    # lower-precision 12-bit number
 >>> ly = y.log()                    # ly created in same family as y
 >>> print(ly)                       # fractional error ~1/2^12 or ~2e-4
-1.162841
+1.163085
 >>> print(ly.exp())
-3.198730
+3.199462
 >>> fy = float(y)
 >>> print(fy)
 3.199951171875
@@ -52,7 +52,7 @@ but solely through an explicit cast.
 >>> # a = x + y                     # throws exception - different families
 >>> a = x + FXnum(y, _defaultFamily)
 >>> print(a)
-5.2999511718749999999
+5.2999511718750000000
 >>> b = rx + x                      # ok - same families
 >>> # c = rx + ly                   # throws exception - different families
 >>> d = ly + y                      # ok - same families
@@ -365,9 +365,9 @@ class FXnum:
             if 'scaled_value' in kwargs:
                 sv = kwargs['scaled_value']
             elif isinstance(val, float):
-                tmpfam = FXfamily(family.fraction_bits + 1)
                 (n, d) = val.as_integer_ratio()
-                sv = ((tmpfam(n) / d).scaledval + 1) >> 1
+                # round half-up of val*scale, independent of __truediv__ rounding
+                sv = (((2 * n * family.scale) // d) + 1) >> 1
             else:
                 sv = int(round(val * family.scale))
                 # 'int' casting improves compatibility with Python-2.7
@@ -523,10 +523,12 @@ class FXnum:
     def __truediv__(self, other):
         """Divide by another number (without truncation)"""
         other = self._CastOrFail_(other)
-        return FXnum._rawbuild(self.family,
-                               ((self.scaledval * self.family.scale
-                                        + self.family._roundup)
-                                    // other.scaledval))
+        numer = self.scaledval * self.family.scale
+        denom = other.scaledval
+        if denom < 0:
+            numer, denom = -numer, -denom
+        # round half-up: bias must be proportional to the divisor, not scale/2
+        return FXnum._rawbuild(self.family, (numer + denom // 2) // denom)
     __div__ = __truediv__
 
     def __rtruediv__(self, other):

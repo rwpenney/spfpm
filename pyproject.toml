@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spfpm"
-version = "1.8.0"
+version = "1.8.1"
 authors = [ { name="RW Penney" } ]
 description = "Tools for arithmetic on fixed-point (binary) numbers"
 readme = "README.md"

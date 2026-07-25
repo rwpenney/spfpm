@@ -1,5 +1,7 @@
 ChangeLog for Simple Python Fixed-Point Module
 
+22Jul26	- Corrected divisor-dependent rounding bias in division (issue #14, @gaoflow)
+
 19Jul26	- *** spfpm-1.8 released
 
 15Jul26	- Migrated packaging configuration from setup.py to pyproject.toml
